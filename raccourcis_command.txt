@@ -4,5 +4,5 @@ scp rassoul@lappui.in2p3.fr/lapp_data/cta/Data/RawData/LaPalma/recorded-stream/d
 <!-- Pour se connecter sur le serveur du lapp -->
 ssh rassoul@lappui.in2p3.fr
 
-git token
+<!-- git token -->
 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
