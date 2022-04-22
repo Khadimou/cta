@@ -6,3 +6,6 @@ ssh rassoul@lappui.in2p3.fr
 
 <!-- git token -->
 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
+
+<!-- accéder aux images simulées -->
+cd /lapp_data/cta/Data/Prod5/LaPalmaProd5_Trans80/gamma/zenith_20deg/south_pointing/off0.4deg/
