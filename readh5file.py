@@ -32,21 +32,14 @@ def values_from_h5file(fname):
 
     htable = np.fromfile("injunction_table_lst.pny", offset=8, dtype=np.uint16)
     matrix = np.zeros(55*55)
-    
-    matrix[htable] = tab_good_event[0]
-    res = matrix.reshape(55,55)
 
-    im = Image.fromarray(img[2])
-    mat = np.asarray(im)
-    scale = scale_array(mat)
     #compute image hash with average hash
     hash = []
 
     for i in range(nb_img):
-        imat = Image.fromarray(img[i])
-        imat = imat.convert("RGB")
-        hash.append(imagehash.average_hash(imat))
-
+        matrix[htable] = img[i]
+        res = matrix.reshape(55,55)
+        hash.append(imagehash.phash(Image.fromarray(res)))
      
     #for l in range(len(hash)):
         #print("image hash",hash[l])
