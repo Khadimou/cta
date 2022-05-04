@@ -1,5 +1,6 @@
 #import libraries
 from json.tool import main
+from re import M
 import tables
 from tables import *
 import numpy as np
@@ -7,24 +8,23 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import imagehash
 import glob
+from hashtable import HashTable
+import pandas as pd
+import tqdm
+   
+# importing os.path module
+import os.path
 
 #compute impact parameter
-def cip(j,x,y,pos_x,pos_y):
-    impact = []
-    for i in range(x.size):
-        dist2 = np.square(x[i]-pos_x[j]) + np.square(y[i]-pos_y[j])
-        impact.append(np.sqrt(dist2))
-
-    return impact
+def cip(x,y,pos_x,pos_y):
+    return np.sqrt(np.square(x-pos_x) + np.square(y-pos_y))
+    
 
 #compute alpha angle at position j
-def angle(j,x,y,pos_x,pos_y):
-    alpha = []
-    for i in range(x.size):
-        tmp = np.math.atan2(y[i]-pos_y[j],x[i]-pos_x[j]) *  180 / np.pi
-        alpha.append(tmp)
-
-    return alpha
+def angle(x,y,pos_x,pos_y):
+    
+    return np.math.atan2(y-pos_y,x-pos_x) *  180 / np.pi
+        
 
 #return the singular values
 def svd(res):
@@ -38,6 +38,7 @@ def svd(res):
         sv.append(S[i][i])
     return sv
 
+# scaling image array
 def scale_array(arr):
     max = arr.max()
     min = arr.min()
@@ -66,10 +67,12 @@ def values_from_h5file(fname):
 
     #compute image hash with average hash
     hash = []
+    mat = np.zeros((nb_img,55,55),dtype=np.float32)
 
     for i in range(nb_img):
         matrix[htable] = img[i]
         res = matrix.reshape(55,55)
+        mat[i] = res
         hash.append(imagehash.phash(Image.fromarray(res)))
      
     #for l in range(len(hash)):
@@ -86,7 +89,132 @@ def values_from_h5file(fname):
     pos_x = file.root.instrument.subarray.layout.col("pos_x")
     pos_y = file.root.instrument.subarray.layout.col("pos_y")
 
-    return x, y, pos_x, pos_y, E, h, Imax, eventId, img, px_row, px_col, tab_good_event, hash, res
+    return (x, y,  E, h, Imax, eventId, img, hash, mat), pos_x, pos_y
+
+#def read_file(filename):
+    #"Select data from all the tables in filename"
+    #fileh = tables.open_file(filename, mode = "r")
+    #result = []
+    #for table in fileh("/", 'Table'):
+        #result = [p['var3'] for p in table if p['var2'] <= 20]
+    #fileh.close()
+    #return result
+
+# function to look up and compare a hash table
+def compare_hashes(h):
+    res = []
+    #print("nombre de hash ", len(h))
+
+    for i in range(len(h)-1):
+        #comparison using a hamming distance
+        if(h[i] == h[i+1]):
+            res.append(h[i])
+        if i==len(h)-1:
+            break
+
+    if(len(res) == 0):
+        print("NO MATCHING FOUND between hashes xxx")
+    
+    return res
+
+#creating tables for datasets
+class Mc_shower(IsDescription):
+    name = StringCol(20)
+    idevent = UInt64Col()
+    energy = Float32Col()
+    hfirstint = Float32Col()
+    Imax = Float32Col()
+    impact = Float32Col()
+    x = Float32Col()
+    y = Float32Col() 
+    hash = StringCol(64) 
+    sv = Float32Col(shape=55)
+    alpha = Float32Col()
+
+def process_event(event,telescope_x, telescope_y):
+  
+    x = event[0]
+    y = event[1]
+    
+    img = event[6]
+   
+    hash = event[7]
+
+    res = event[8]
+
+    #build hash table
+    ht = HashTable()
+    result = []; key = []; val = []
+    
+    #for k in range(img.shape[0]):
+    ht.insert(str(hash),str(img))
+        
+    #for i in range(img.shape[0]):
+        #print("key ",str(all_files[i]))
+        #print("value ",ht.find(all_files[i])) #renvoie le hash de l'image à la position indiquée dans le fichier
+    key.append(str(hash))
+    val.append(ht.find(str(hash)))
+
+    table = {'key': key, 'value': val}
+    result = pd.DataFrame(table)
+    #print(result)
+    alpha = angle(x,y,telescope_x,telescope_y)
+
+    # Applying SVD
+    sv = svd(res)
+
+    ro = cip(x,y,telescope_x,telescope_y) #impact parameter at position 0
+
+    return ro,hash,sv,alpha
+
+def process_file(outputfile,inputfile):
+    test_data, pos_x, pos_y = values_from_h5file(inputfile)
+    h5file = open_file(outputfile,mode ="w", title="Simulated image file")
+    #create a group
+    group = h5file.create_group("/",'Shower','Shower Info')
+    #create a table
+    table = h5file.create_table(group,"gerbe",Mc_shower,"mc_shower: gerbe")
+    #now let's fill the table with its values
+    telescope_x = pos_x[0]
+    telescope_y = pos_y[0]
+   
+    gerbe = table.row #write data rows into the table
+    for i,event in enumerate(zip(*test_data)):
+        ro,hash,sv,alpha = process_event(event,telescope_x,telescope_y)
+        E = event[2]
+        h = event[3]
+        x = event[0]
+        y = event[1]
+        Imax = event[4]
+        eventId = event[5]
+        img = event[6]
+        hash = event[7]
+        res = event[8]
+ 
+        gerbe['name'] = inputfile
+        gerbe['idevent'] = eventId
+        gerbe['energy'] = E
+        gerbe['hfirstint'] = h
+        gerbe['x'] = x
+        gerbe['y'] = y
+        gerbe['Imax'] = Imax
+        gerbe['impact'] = ro
+        gerbe['hash'] = hash
+        gerbe['sv'] = sv
+        gerbe['alpha'] = alpha
+        #insert a new gerbe record
+
+        gerbe.append()
+
+    table.flush()
+
+    h5file.close()
+
+def process_listfile(inputfiles,outputdir):
+    os.makedirs(outputdir,exist_ok=True)
+    for inputfile in tqdm.tqdm(inputfiles):
+        outputfile = outputdir+"/hash_"+os.path.basename(inputfile)
+        process_file(outputfile,inputfile)
     
 if __name__ == "__main__":
 
@@ -94,125 +222,68 @@ if __name__ == "__main__":
     test_fnames = glob.glob('Data/testing/*.h5',recursive=True) #500 files
     train_fnames = glob.glob('Data/training/*.h5',recursive=True) #500 files
 
+    process_listfile(test_fnames,"./hash_testing")
+    process_listfile(train_fnames,"./hash_training")
+
     #retrieve file names
-    testname = []
-    trainname = []
-    for test in test_fnames:
-        testname.append(test)
-    for train in train_fnames:
-        trainname.append(train)
+    # testname = []
+    # trainname = []
+    # for test in test_fnames:
+    #     testname.append(test)
+    # for train in train_fnames:
+    #     trainname.append(train)
+    # all_files = trainname + testname
 
-    #file train
-    for iter in range(len(testname)):
-        test_data = values_from_h5file(testname[iter])
-        train_data = values_from_h5file(trainname[iter])
+    # #compute hashing
+    # for iter in range(len(testname)):
+    #     test_data = values_from_h5file(testname[iter])
+        
+    #     E = test_data[4]
+    #     h = test_data[5]
+    #     x = test_data[0]
+    #     y = test_data[1]
+    #     Imax = test_data[6]
+    #     eventId = test_data[7]
+    #     img = test_data[8]
+    #     px_row = test_data[9]
+    #     px_col2 = test_data[10]
+    #     tab_good_event = test_data[11]
+    #     hash = test_data[12]
+    #     pos_x = test_data[2]
+    #     pos_y = test_data[3]
+    #     res = test_data[13]
+        
+    #     #match = compare_hashes(both_hash)
+    #     #for j in range(len(match)):
+    #         #print("Matching training + testing files hashes", match[j]) #we notice some collisions
 
-        #retrieving some values from training and testing folder of the simulated images
-        E1 = train_data[4]
-        h1 = train_data[5]
-        x1 = train_data[0]
-        y1 = train_data[1]
-        Imax1 = train_data[6]
-        eventId1 = train_data[7]
-        img1 = train_data[8]
-        px_row1 = train_data[9]
-        px_col1 = train_data[10]
-        tab_good_event1 = train_data[11]
-        hash1 = train_data[12]
-        pos_x1 = train_data[2]
-        pos_y1 = train_data[3]
-        res1 = train_data[13]
+    #     #build hash table
+    #     ht = HashTable()
+    #     result = []; key = []; val = []
+       
+    #     for k in range(img.shape[0]):
+    #         ht.insert(str(hash[k]),str(img[k]))
+            
+    #     for i in range(img.shape[0]):
+    #         #print("key ",str(all_files[i]))
+    #         #print("value ",ht.find(all_files[i])) #renvoie le hash de l'image à la position indiquée dans le fichier
+    #         key.append(str(hash[i]))
+    #         val.append(ht.find(str(hash[i])))
+    
+    #     table = {'key': key, 'value': val}
+    #     result = pd.DataFrame(table)
+    #     #print(result)
+        
+    #     #chaining = listedoublementchainee()
+        
+    #     #chaining.insert_listevide(hash1)
+    #     #chaining.affiche_liste()
+    #     # appliquer une méthode d'adressage ouvert ou de chainage (double hachage, hachage linéaire)
+    #     # fonctions: ajout, recherche et delete
 
-        E2 = test_data[4]
-        h2 = test_data[5]
-        x2 = test_data[0]
-        y2 = test_data[1]
-        Imax2 = test_data[6]
-        eventId2 = test_data[7]
-        img2 = test_data[8]
-        px_row2 = test_data[9]
-        px_col2 = test_data[10]
-        tab_good_event2 = test_data[11]
-        hash2 = test_data[12]
-        pos_x2 = test_data[2]
-        pos_y2 = test_data[3]
-        res2 = test_data[13]
+    #     alpha = angle(0,x,y,pos_x,pos_y)
 
+    #     # Applying SVD
+    #     sv = svd(res)
 
-        alpha1 = angle(0,x1,y1,pos_x1,pos_y1)
-        alpha2 = angle(0,x2,y2,pos_x2,pos_y2)
-
-        # Applying SVD
-        sv2 = svd(res2)
-        sv1 = svd(res1)
-
-        ro1 = cip(0,x1,y1,pos_x1,pos_y1) #impact parameter at position 0
-        ro2 = cip(0,x2,y2,pos_x2,pos_y2) #impact parameter at position 0
-
-        #creating tables for datasets
-        class Mc_shower(IsDescription):
-            name = StringCol(100)
-            idevent = UInt64Col()
-            energy = Float32Col()
-            hfirstint = Float32Col()
-            Imax = Float32Col()
-            impact = Float32Col()
-            x = Float32Col()
-            y = Float32Col()
-            hash1 = StringCol(64, shape=img1.shape[0]) 
-            hash2 = StringCol(64, shape=img2.shape[0]) 
-            sv = Float64Col(shape=55)
-            alpha = Float64Col()
-
-        h5file = open_file("database.h5",mode ="w", title="Simulated image file")
-        #create a group
-        group = h5file.create_group("/",'Shower','Shower Info')
-
-        #create tables
-        for tablename in ('gerbe1','gerbe2'):
-            #create a table
-            table = h5file.create_table(group,tablename,Mc_shower,"mc_shower: "+tablename)
-            #now let's fill the table with its values
-            gerbe = table.row #write data rows into the table
-
-            if tablename=='gerbe1':
-                for i in range(len(trainname)):
-                    gerbe['name'] = trainname[i]
-                    gerbe['idevent'] = eventId1[i]
-                    gerbe['energy'] = E1[i]
-                    gerbe['hfirstint'] = h1[i]
-                    gerbe['x'] = x1[i]
-                    gerbe['y'] = y1[i]
-                    gerbe['Imax'] = Imax1[i]
-                    gerbe['impact'] = ro1[i]
-                    gerbe['hash1'] = hash1
-                    gerbe['sv'] = sv1
-                    gerbe['alpha'] = alpha1[i]
-                    #insert a new gerbe record
-
-                    gerbe.append()
-
-            if tablename=='gerbe2':
-                for i in range(len(testname)):
-                    gerbe['name'] = testname[i]
-                    gerbe['idevent'] = eventId2[i]
-                    gerbe['energy'] = E2[i]
-                    gerbe['hfirstint'] = h2[i]
-                    gerbe['x'] = x2[i]
-                    gerbe['y'] = y2[i]
-                    gerbe['Imax'] = Imax2[i]
-                    gerbe['impact'] = ro2[i]
-                    gerbe['hash2'] = hash2
-                    gerbe['sv'] = sv2
-                    gerbe['alpha'] = alpha2[i]
-                    #insert a new gerbe record
-
-                    gerbe.append()
-
-            table.flush()
-
-            #We have our data on disk, and now we need to access it and select from specific columns the values we are interested in
-            # table1 = h5file.root.Shower.gerbe1
-            # table2 = h5file.root.Shower.gerbe2
-
-    h5file.close()
+    #     ro = cip(0,x,y,pos_x,pos_y) #impact parameter at position 0
