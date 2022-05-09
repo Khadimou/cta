@@ -11,46 +11,39 @@ import glob
 from hashtable import HashTable
 import pandas as pd
 import tqdm
+from list2chain import listedoublementchainee
 
-#build hash table
-def hash_table(h1,h2,img):
+#function to retrieve parameter values from cta dataset
+def get_img(fname):
+    file = tables.open_file(fname,"r")
+    #visualize images from the telescope
+    img = file.root.dl1.event.telescope.images.LST_LSTCam.col("image")
+    px_row = file.root.instrument.telescope.camera.LSTCam.col("pix_x")
+    px_col = file.root.instrument.telescope.camera.LSTCam.col("pix_y")
 
-    hachage = h1 + h2
+    #number of images in fname
+    nb_img = img.shape[0]
+
+    return  img, nb_img
+
+#
+def process_hashing(hash,img):
+    
     #build hash table
     ht = HashTable()
     result = []; key = []; val = []
     
-    #for k in range(img.shape[0]):
-    ht.insert(str(hachage),str(img))
-        
-    #for i in range(img.shape[0]):
-        #print("key ",str(all_files[i]))
-        #print("value ",ht.find(all_files[i])) #renvoie le hash de l'image à la position indiquée dans le fichier
-    key.append(str(hachage))
-    val.append(ht.find(str(hachage)))
+    ht.insert(str(hash),str(img))
+         
+    key.append(str(hash))
+    val.append(ht.find(str(hash))) #renvoie le hash de l'image à la position indiquée dans le fichier
 
     table = {'key': key, 'value': val}
     result = pd.DataFrame(table)
     #print(result)
+    return result
 
-
-# function to compute collisions between hash vectors
-def compute_collisions(h1,h2):
-    res = []
-    df = pd.DataFrame(data={'hash1':h1})
-    other = pd.DataFrame(data={'hash2':h2})
-    hachage =h1+h2
-    for j in range(len(h1)-1):
-        if(list(set(str(h1[j])) - set(str(h2[j]))) + list(set(str(h1[j])) - set(str(h2[j])))==None):
-            res.append(h1[j])
-
-    if(len(res) == 0):
-        print("NO MATCHING FOUND between hashes xxx")
-
-    print("collisions",res)
-    
-    return res
-
+#retrieve hashes from our files
 def read_files(inputfile):
 
     # read 1 column using field= parameter:
@@ -58,8 +51,36 @@ def read_files(inputfile):
         hash_arr = h5f.root.Shower.gerbe.read(field='hash')
 
     return hash_arr
-        
 
+def get_hashtable(fnames):
+    hashtab = []
+    iter = 0
+    for inputfile in tqdm.tqdm(fnames):
+        image, size = get_img(inputfile)
+        img = image[iter]
+        hash = hash1[iter][iter]
+        iter = iter + 1
+        hashtab.append( process_hashing(hash,img))
+    #print(hashtab)
+    return hashtab
+
+def search_in_hashtable(hashtab, hash_test):
+    # search matching hashes with hash_testing
+    iter = 0
+    keys = []
+    for h in hashtab:
+        #print("key ",h.iat[0,0])
+        keys.append(h.iat[0,0])
+    
+    while iter < len(keys)-1:
+        for l in range(len(keys)):
+            if hash_test[l][iter] == keys[l]:
+                print("Matching found !!!!!")
+            #print("hashes equal? : ",hash_test[l][iter] == keys[l])
+            #print("Manhattan distance : ",hash_test[l][iter]-keys[l])
+        iter = iter + 1
+        
+    print("DONE SEARCHING ")
 
 if __name__ == "__main__":
 
@@ -71,15 +92,19 @@ if __name__ == "__main__":
     hash2 = []
 
     for input in train_fnames:
-        hash1.append(read_files(input))
+        hash1.append(read_files(input)) #retrieve hash from training dataset
 
     for input in test_fnames:
-        hash2.append(read_files(input))
-        
-    match = compute_collisions(hash1,hash2)
-    for j in range(len(match)):
-        print("Matching training + testing files hashes", match[j]) #we do not notice any collisions
+        hash2.append(read_files(input)) # retrieve hash from testing dataset
 
-    # ht = HashTable()
-    # ht.insert((str(hash1+hash2),str(img)))
-    # print(ht.find(str(hash1+hash2)))
+    #retrieve all the files from our dataset
+    test_fnames = glob.glob('Data/testing/*.h5',recursive=True) #500 files
+    train_fnames = glob.glob('Data/training/*.h5',recursive=True) #500 files
+    hashtab = get_hashtable(train_fnames)
+    search_in_hashtable(hashtab,hash2)
+
+    # store hashtable
+    # chainage = listedoublementchainee()
+    # for i in range(len(hashtab)):
+    #     chainage.insertion_debut(hashtab[i])
+    #chainage.affiche_liste()
