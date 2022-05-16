@@ -13,13 +13,24 @@ import pandas as pd
 import tqdm
 from list2chain import listedoublementchainee
 
+# convert string hash to int
+def compute_hash(s):
+    p = 31
+    m = 1e9 + 9
+    hash_value = 0
+    p_pow = 1
+    print("hash is ", s)
+    for c in s:
+        hash_value = (hash_value + (int(c, base=16) +1)* p_pow) % m 
+        p_pow = (p_pow * p) % m 
+
+    return hash_value
+
 #function to retrieve parameter values from cta dataset
 def get_img(fname):
     file = tables.open_file(fname,"r")
     #visualize images from the telescope
     img = file.root.dl1.event.telescope.images.LST_LSTCam.col("image")
-    px_row = file.root.instrument.telescope.camera.LSTCam.col("pix_x")
-    px_col = file.root.instrument.telescope.camera.LSTCam.col("pix_y")
 
     #number of images in fname
     nb_img = img.shape[0]
@@ -71,6 +82,8 @@ def search_in_hashtable(hashtab, hash_test):
     for h in hashtab:
         #print("key ",h.iat[0,0])
         keys.append(h.iat[0,0])
+        print("key ",compute_hash(h.iat[0,0]))
+        exit()
     
     while iter < len(keys)-1:
         for l in range(len(keys)):
