@@ -16,13 +16,16 @@ from list2chain import listedoublementchainee
 # convert string hash to int
 def compute_hash(s):
     p = 31
-    m = 1e9 + 9
+    m = 1*np.exp(9) + 9
     hash_value = 0
     p_pow = 1
-    print("hash is ", s)
-    for c in s:
-        hash_value = (hash_value + (int(c, base=16) +1)* p_pow) % m 
-        p_pow = (p_pow * p) % m 
+    #print("hash is ", s)
+    str = s.translate({ord(i): None for i in 'b'}).replace("'", "")
+    str.replace("'", "")
+    #print(str)
+    for c in str:
+        hash_value = (hash_value + (int(c, 16) -ord('a') +1)* p_pow) % m 
+        p_pow = (p_pow ** p) % m 
 
     return hash_value
 
@@ -82,18 +85,35 @@ def search_in_hashtable(hashtab, hash_test):
     for h in hashtab:
         #print("key ",h.iat[0,0])
         keys.append(h.iat[0,0])
-        print("key ",compute_hash(h.iat[0,0]))
-        exit()
+        #print("key ",compute_hash(h.iat[0,0]))
     
+    img_vector = []
     while iter < len(keys)-1:
         for l in range(len(keys)):
             if hash_test[l][iter] == keys[l]:
                 print("Matching found !!!!!")
             #print("hashes equal? : ",hash_test[l][iter] == keys[l])
-            #print("Manhattan distance : ",hash_test[l][iter]-keys[l])
+            hash_diff = int(compute_hash(hash_test[l][iter].decode())-compute_hash(keys[l]))
+            #print("Manhattan distance : ", hash_diff)
+            if(hash_diff==0):
+                print("MATCH FOUUUUUNNNDDDD !!!!! between keys: ", keys[l], hash_test[l][iter])
+                print("img values ", get_img_val(hashtab,keys[l]))
+                img_vector.append( get_img_val(hashtab,keys[l]))
+            
         iter = iter + 1
         
     print("DONE SEARCHING ")
+    # return img values of matching hashes
+    return img_vector
+
+# return value of corresponding key
+def get_img_val(hashtab, key):
+    res = 0
+    for h in hashtab:
+        if h.iat[0,0]==key:
+            res=(h.iat[0,1])
+            #print(h.iat[0,1])
+    return res
 
 if __name__ == "__main__":
 
@@ -113,8 +133,10 @@ if __name__ == "__main__":
     #retrieve all the files from our dataset
     test_fnames = glob.glob('Data/testing/*.h5',recursive=True) #500 files
     train_fnames = glob.glob('Data/training/*.h5',recursive=True) #500 files
+    all_files = train_fnames+test_fnames
+    hashes = hash2 + hash1
     hashtab = get_hashtable(train_fnames)
-    search_in_hashtable(hashtab,hash2)
+    search_in_hashtable(hashtab,hashes)
 
     # store hashtable
     # chainage = listedoublementchainee()
