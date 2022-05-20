@@ -8,26 +8,9 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import imagehash
 import glob
-from hashtable import HashTable
 import pandas as pd
 import tqdm
 from list2chain import listedoublementchainee
-
-# convert string hash to int
-def compute_hash(s):
-    p = 31
-    m = 1*np.exp(9) + 9
-    hash_value = 0
-    p_pow = 1
-    #print("hash is ", s)
-    str = s.translate({ord(i): None for i in 'b'}).replace("'", "")
-    str.replace("'", "")
-    #print(str)
-    for c in str:
-        hash_value = (hash_value + (int(c, 16) -ord('a') +1)* p_pow) % m 
-        p_pow = (p_pow ** p) % m 
-
-    return hash_value
 
 #function to retrieve parameter values from cta dataset
 def get_img(fname):
@@ -40,22 +23,6 @@ def get_img(fname):
 
     return  img, nb_img
 
-#
-def process_hashing(hash,img):
-    
-    #build hash table
-    ht = HashTable()
-    result = []; key = []; val = []
-    
-    ht.insert(str(hash),str(img))
-         
-    key.append(str(hash))
-    val.append(ht.find(str(hash))) #renvoie le hash de l'image à la position indiquée dans le fichier
-
-    table = {'key': key, 'value': val}
-    result = pd.DataFrame(table)
-    #print(result)
-    return result
 
 #retrieve hashes from our files
 def read_files(inputfile):
@@ -67,40 +34,35 @@ def read_files(inputfile):
     return hash_arr
 
 def get_hashtable(fnames):
-    hashtab = []
+    hashtab = {}
     iter = 0
+    print("Put images values with corresponding key into hashtable \n")
     for inputfile in tqdm.tqdm(fnames):
         image, size = get_img(inputfile)
         img = image[iter]
-        hash = hash1[iter][iter]
+        hash = imagehash.hex_to_hash(hash1[iter][iter])
         iter = iter + 1
-        hashtab.append( process_hashing(hash,img))
+        hashtab[hash] = img
     #print(hashtab)
     return hashtab
 
 def search_in_hashtable(hashtab, hash_test):
     # search matching hashes with hash_testing
     iter = 0
-    keys = []
-    for h in hashtab:
-        #print("key ",h.iat[0,0])
-        keys.append(h.iat[0,0])
-        #print("key ",compute_hash(h.iat[0,0]))
+    keys = list(hashtab.keys())
     
     img_vector = []
-    while iter < len(keys)-1:
-        for l in range(len(keys)):
-            if hash_test[l][iter] == keys[l]:
-                print("Matching found !!!!!")
-            #print("hashes equal? : ",hash_test[l][iter] == keys[l])
-            hash_diff = int(compute_hash(hash_test[l][iter].decode())-compute_hash(keys[l]))
-            #print("Manhattan distance : ", hash_diff)
-            if(hash_diff==0):
-                print("MATCH FOUUUUUNNNDDDD !!!!! between keys: ", keys[l], hash_test[l][iter])
-                print("img values ", get_img_val(hashtab,keys[l]))
-                img_vector.append( get_img_val(hashtab,keys[l]))
-            
+    print("Looking for a match between testing images hashes and training images hashes \n")
+    for h1 in keys:
+        for h2 in hash_test[iter]:
+            hashdiff = imagehash.hex_to_hash(h2)-h1
+            #print("hashdiff ", hashdiff)
         iter = iter + 1
+    
+        if(hashdiff<=6):
+            print("MATCH FOUUUUUNNNDDDD !!!!! between keys: ", h1, imagehash.hex_to_hash(h2))
+            print("img values ", get_img_val(hashtab,h1))
+            img_vector.append( get_img_val(hashtab,h1))
         
     print("DONE SEARCHING ")
     # return img values of matching hashes
@@ -109,10 +71,10 @@ def search_in_hashtable(hashtab, hash_test):
 # return value of corresponding key
 def get_img_val(hashtab, key):
     res = 0
-    for h in hashtab:
-        if h.iat[0,0]==key:
-            res=(h.iat[0,1])
-            #print(h.iat[0,1])
+    for h in list(hashtab.keys()):
+        if h==key:
+            res=(hashtab[h])
+            #print("val ", res)
     return res
 
 if __name__ == "__main__":
@@ -124,19 +86,21 @@ if __name__ == "__main__":
     hash1 = []
     hash2 = []
 
-    for input in train_fnames:
+    print("Get training hash values \n")
+    for input in tqdm.tqdm(train_fnames):
         hash1.append(read_files(input)) #retrieve hash from training dataset
 
-    for input in test_fnames:
+    print("Get testing hash values \n")
+    for input in tqdm.tqdm(test_fnames):
         hash2.append(read_files(input)) # retrieve hash from testing dataset
 
     #retrieve all the files from our dataset
     test_fnames = glob.glob('Data/testing/*.h5',recursive=True) #500 files
     train_fnames = glob.glob('Data/training/*.h5',recursive=True) #500 files
-    all_files = train_fnames+test_fnames
-    hashes = hash2 + hash1
+   
     hashtab = get_hashtable(train_fnames)
-    search_in_hashtable(hashtab,hashes)
+    #for input in test_fnames:
+    search_in_hashtable(hashtab,hash2)
 
     # store hashtable
     # chainage = listedoublementchainee()
