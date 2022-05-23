@@ -103,7 +103,9 @@ if __name__ == "__main__":
     search_in_hashtable(hashtab,hash2)
 
     # store hashtable
-    # chainage = listedoublementchainee()
-    # for i in range(len(hashtab)):
-    #     chainage.insertion_debut(hashtab[i])
+    #chainage = listedoublementchainee()
+    
+    tri = [hashtab]
+    tri.sort()
+    print("tableau trie ",tri)
     #chainage.affiche_liste()
