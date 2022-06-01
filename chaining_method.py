@@ -105,7 +105,9 @@ if __name__ == "__main__":
     # store hashtable
     #chainage = listedoublementchainee()
     
-    tri = [hashtab]
-    tri.sort()
+    tri = pd.DataFrame(hashtab)
+    # plt.figure()
+    # tri.plot(kind="hist")
+    # plt.show()
     print("tableau trie ",tri)
     #chainage.affiche_liste()
