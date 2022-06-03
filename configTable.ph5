@@ -1,0 +1,16 @@
+
+///Table of types
+TableEvent{
+	///Event id
+	size_t eventId;
+	///Timestamp
+	double timestamp;
+	///Waveform
+	Tensor(unsigned short, nbSlice, nbPixel) waveform;
+	///Short value
+	Tensor(float, nbPixel) calibSignal;
+}
+
+
+
+
