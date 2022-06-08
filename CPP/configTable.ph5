@@ -1,0 +1,39 @@
+
+///Table of types
+TableEvent{
+	///Event id
+	size_t eventId;
+
+	//File name
+	size_t file_id;
+
+    //Energy
+    float energy ;
+
+	//height
+    float hfirstint ;
+
+	//Intensity max
+    float Imax; 
+
+	//Impact distance
+    float impact;
+
+	//abscisse
+    float x; 
+	//ordonnee
+    float y ;
+
+	//image hash
+    Tensor(char, 64) hash ;
+
+	//singular val
+    Tensor(float, nb_vs) sv ;
+
+	//angle
+    float alpha;
+}
+
+
+
+
