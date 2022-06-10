@@ -1,11 +1,11 @@
 
 ///Table of types
-TableEvent{
+TableEvent[gerbe]{
 	///Event id
-	size_t eventId;
+	size_t eventId[idevent];
 
 	//File name
-	size_t file_id;
+	size_t file_id[name];
 
     //Energy
     float energy ;

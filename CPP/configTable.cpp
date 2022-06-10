@@ -331,7 +331,7 @@ void TableEvent::getRow(size_t i, size_t & eventId, size_t & file_id, float & en
 	alpha = getAlpha(i);
 }
 
-///Set the attribute eventId (column eventId)
+///Set the attribute eventId (column idevent)
 /**	@param i : index of the row to be used
  * 	@param val : value to be copied
 */
@@ -339,7 +339,7 @@ void TableEvent::setEventId(size_t i, size_t val){
 	p_eventId[i] = val;
 }
 
-///Set the attribute file_id (column file_id)
+///Set the attribute file_id (column name)
 /**	@param i : index of the row to be used
  * 	@param val : value to be copied
 */
@@ -421,21 +421,21 @@ void TableEvent::setAlpha(size_t i, float val){
 	p_alpha[i] = val;
 }
 
-///Get the full column of the attribute eventId (column eventId)
+///Get the full column of the attribute eventId (column idevent)
 /**	@return pointer of the full column
 */
 const size_t * TableEvent::getEventIdFull() const{
 	return p_eventId;
 }
 
-///Get the full column of the attribute eventId (column eventId)
+///Get the full column of the attribute eventId (column idevent)
 /**	@return pointer of the full column
 */
 size_t * TableEvent::getEventIdFull(){
 	return p_eventId;
 }
 
-///Get the value i of the attribute eventId (column eventId)
+///Get the value i of the attribute eventId (column idevent)
 /**	@param i : index of the row to be used
  * 	@return corresponding value
 */
@@ -443,7 +443,7 @@ size_t TableEvent::getEventId(size_t i) const{
 	return p_eventId[i];
 }
 
-///Get the value i of the attribute eventId (column eventId)
+///Get the value i of the attribute eventId (column idevent)
 /**	@param i : index of the row to be used
  * 	@return corresponding value
 */
@@ -451,21 +451,21 @@ size_t & TableEvent::getEventId(size_t i){
 	return p_eventId[i];
 }
 
-///Get the full column of the attribute file_id (column file_id)
+///Get the full column of the attribute file_id (column name)
 /**	@return pointer of the full column
 */
 const size_t * TableEvent::getFile_idFull() const{
 	return p_file_id;
 }
 
-///Get the full column of the attribute file_id (column file_id)
+///Get the full column of the attribute file_id (column name)
 /**	@return pointer of the full column
 */
 size_t * TableEvent::getFile_idFull(){
 	return p_file_id;
 }
 
-///Get the value i of the attribute file_id (column file_id)
+///Get the value i of the attribute file_id (column name)
 /**	@param i : index of the row to be used
  * 	@return corresponding value
 */
@@ -473,7 +473,7 @@ size_t TableEvent::getFile_id(size_t i) const{
 	return p_file_id[i];
 }
 
-///Get the value i of the attribute file_id (column file_id)
+///Get the value i of the attribute file_id (column name)
 /**	@param i : index of the row to be used
  * 	@return corresponding value
 */
@@ -852,8 +852,8 @@ size_t TableEvent::getOffsetAlpha() const{
 H5::CompType TableEvent::getCompTypeAll() const{
 	size_t sizeAll(sizeof(size_t) + sizeof(size_t) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(char)*TABLEEVENT_HASH_0 + sizeof(float)*p_nb_vs + sizeof(float));
 	H5::CompType typeCol(sizeAll);
-	typeCol.insertMember("eventId", getOffsetEventId(), getTypeEventId());
-	typeCol.insertMember("file_id", getOffsetFile_id(), getTypeFile_id());
+	typeCol.insertMember("idevent", getOffsetEventId(), getTypeEventId());
+	typeCol.insertMember("name", getOffsetFile_id(), getTypeFile_id());
 	typeCol.insertMember("energy", getOffsetEnergy(), getTypeEnergy());
 	typeCol.insertMember("hfirstint", getOffsetHfirstint(), getTypeHfirstint());
 	typeCol.insertMember("Imax", getOffsetImax(), getTypeImax());
@@ -866,21 +866,21 @@ H5::CompType TableEvent::getCompTypeAll() const{
 	return typeCol;
 }
 
-///Get DataType of attribute eventId (column eventId)
+///Get DataType of attribute eventId (column idevent)
 /**	@return DataType of the attribute eventId
 */
 H5::CompType TableEvent::getCompTypeEventId() const{
 	H5::CompType typeCol(sizeof(size_t));
-	typeCol.insertMember("eventId", 0, getTypeEventId());
+	typeCol.insertMember("idevent", 0, getTypeEventId());
 	return typeCol;
 }
 
-///Get DataType of attribute file_id (column file_id)
+///Get DataType of attribute file_id (column name)
 /**	@return DataType of the attribute file_id
 */
 H5::CompType TableEvent::getCompTypeFile_id() const{
 	H5::CompType typeCol(sizeof(size_t));
-	typeCol.insertMember("file_id", 0, getTypeFile_id());
+	typeCol.insertMember("name", 0, getTypeFile_id());
 	return typeCol;
 }
 
@@ -965,14 +965,14 @@ H5::CompType TableEvent::getCompTypeAlpha() const{
 	return typeCol;
 }
 
-///Get DataType of attribute eventId (column eventId)
+///Get DataType of attribute eventId (column idevent)
 /**	@return DataType of the attribute eventId
 */
 H5::DataType TableEvent::getTypeEventId() const{
 	return H5::PredType::NATIVE_UINT64;
 }
 
-///Get DataType of attribute file_id (column file_id)
+///Get DataType of attribute file_id (column name)
 /**	@return DataType of the attribute file_id
 */
 H5::DataType TableEvent::getTypeFile_id() const{
@@ -1178,7 +1178,7 @@ size_t TableEvent::getBlockOffset() const{
 ///Initialises the table TableEvent
 void TableEvent::initialisationTableEvent(){
 	p__nbRow = 0lu;
-	p__tableName = "TableEvent";
+	p__tableName = "gerbe";
 	p_nb_vs = 0lu;
 	p_eventId = NULL;
 	p_file_id = NULL;
