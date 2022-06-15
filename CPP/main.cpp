@@ -15,15 +15,30 @@ bool checkGeneratedTableConst(const TableEvent & tab){
 	
 	std::cout << "checkGeneratedTable : get event id" << tab.getEventId(0) << std::endl;
 	b &= tab.getEventIdFull() != NULL;
+
+	b &= tab.getImax(0) != NULL;
+	b &= tab.getImaxFull() != NULL;
+
+	b &= tab.getAlpha(0) != NULL;
+	b &= tab.getAlphaFull() != NULL;
+
+	b &= tab.getEnergy(0) != NULL;
+	b &= tab.getEnergyFull() != NULL;
 	
-	std::cout << "checkGeneratedTable : get event id" << tab.getTimestamp(0) << std::endl;
-	b &= tab.getTimestampFull() != NULL;
-	
-	b &= tab.getCalibSignal(0) != NULL;
-	b &= tab.getCalibSignalFull() != NULL;
-	
-	b &= tab.getWaveform(0) != NULL;
-	b &= tab.getWaveformFull() != NULL;
+	b &= tab.getHfirstint(0) != NULL;
+	b &= tab.getHfirstintFull() != NULL;
+
+	b &= tab.getImpact(0) != NULL;
+	b &= tab.getImpactFull() != NULL;
+
+	b &= tab.getSv(0) != NULL;
+	b &= tab.getSvFull() != NULL;
+
+	b &= tab.getX(0) != NULL;
+	b &= tab.getXFull() != NULL;
+
+	b &= tab.getY(0) != NULL;
+	b &= tab.getYFull() != NULL;
 	
 	return b;
 }
@@ -38,14 +53,29 @@ bool checkGeneratedTable(TableEvent & tab){
 	std::cout << "checkGeneratedTable : get event id" << tab.getEventId(0) << std::endl;
 	b &= tab.getEventIdFull() != NULL;
 	
-	std::cout << "checkGeneratedTable : get event id" << tab.getTimestamp(0) << std::endl;
-	b &= tab.getTimestampFull() != NULL;
+	b &= tab.getImax(0) != NULL;
+	b &= tab.getImaxFull() != NULL;
+
+	b &= tab.getAlpha(0) != NULL;
+	b &= tab.getAlphaFull() != NULL;
+
+	b &= tab.getEnergy(0) != NULL;
+	b &= tab.getEnergyFull() != NULL;
 	
-	b &= tab.getCalibSignal(0) != NULL;
-	b &= tab.getCalibSignalFull() != NULL;
-	
-	b &= tab.getWaveform(0) != NULL;
-	b &= tab.getWaveformFull() != NULL;
+	b &= tab.getHfirstint(0) != NULL;
+	b &= tab.getHfirstintFull() != NULL;
+
+	b &= tab.getImpact(0) != NULL;
+	b &= tab.getImpactFull() != NULL;
+
+	b &= tab.getSv(0) != NULL;
+	b &= tab.getSvFull() != NULL;
+
+	b &= tab.getX(0) != NULL;
+	b &= tab.getXFull() != NULL;
+
+	b &= tab.getY(0) != NULL;
+	b &= tab.getYFull() != NULL;
 	
 	return b;
 }
@@ -56,8 +86,8 @@ bool checkGeneratedTable(TableEvent & tab){
 */
 bool testWriteData(const std::string & fileName){
 	TableEvent table;
-	size_t nbRow(10lu), nbSlice(40lu), nbPixel(1855lu);
-	table.setAllDim(nbPixel, nbSlice);
+	size_t nbRow(10lu), nb_vs(55lu);
+	table.setAllDim(nb_vs);
 	table.resize(nbRow);
 	
 	bool b(true);
@@ -67,18 +97,23 @@ bool testWriteData(const std::string & fileName){
 	//Let's set some values in the Table
 	for(size_t i(0lu); i < nbRow; ++i){
 		table.setEventId(i, i);
-		table.setTimestamp(i, 2lu*i);
-		unsigned short * waveform = table.getWaveform(i);
-		for(size_t j(0lu); j < nbSlice; ++j){
-			for(size_t k(0lu); k < nbPixel; ++k){
-				waveform[j*nbPixel + k] = 29lu*(i*nbRow +j*nbPixel + k) % 19lu;
-			}
+		float *sv = table.getSv(i);
+		float energy = table.getEnergy(i);
+ 		float hfirstint = table.getHfirstint(i);
+		float Imax = table.getImax(i);
+ 		float x = table.getX(i);
+		float y = table.getY(i);
+		float impact = table.getImpact(i);
+		//std::cout << "alpha = " << angle(x,y,x,y) << std::endl;
+ 		float alpha = table.getAlpha(i);
+		for(size_t j(0lu); j < nb_vs; ++j){
+			
+			sv[j] = 29lu*(i*nbRow +j*nb_vs ) % 19lu;
+			
 		}
-		float * tabSignal = table.getCalibSignal(i);
-		for(size_t k(0lu); k < nbPixel; ++k){
-			tabSignal[k] = 43lu*(i*nbRow + k) % 17lu;
-		}
+		
 	}
+	
 	
 	//And write our table directly in it
 	table.write(fileName);
@@ -96,23 +131,24 @@ bool testReadData(const std::string & fileName){
 	table.read(fileName);
 	
 	//Get the number of rows and number of columns
-	size_t nbRow = table.getNbEntries(), nbPixel = table.getNbPixel(), nbSlice = table.getNbSlice();
-	std::cout << "testReadData : nbRow = " << nbRow << ", nbPixel = " << nbPixel << ", nbSlice = " << nbSlice << std::endl;
+	size_t nbRow = table.getNbEntries(), nb_vs = table.getNb_vs();
+	std::cout << "testReadData : nbRow = " << nbRow << ", nb_vs = " << nb_vs << std::endl;
 	bool b(true);
 	for(size_t i(0lu); i < nbRow; ++i){
-		b &= table.getEventId(i) == i;
-		b &= table.getTimestamp(i) == 2lu*i;
+		size_t eventId(0lu);
+		size_t fileId(0lu);
 		
-		unsigned short * waveform = table.getWaveform(i);
-		for(size_t j(0lu); j < nbSlice; ++j){
-			for(size_t k(0lu); k < nbPixel; ++k){
-				b &= waveform[j*nbPixel + k] == 29lu*(i*nbRow +j*nbPixel + k) % 19lu;
-			}
+		float *sv = NULL;
+		
+		float energy(0.0), hfirstint(0.0), impact(0.0), alpha(0.0), x(0.0), y(0.0), Imax(0.0);
+		table.getRow(i, Imax, alpha, energy, hfirstint, eventId, impact, sv, x, y);
+		
+		for(size_t j(0lu); j < nb_vs; ++j){
+			
+			b &= sv[i*nb_vs +j] == 29lu*(i*nbRow +j*nb_vs ) % 19lu;
+			
 		}
-		float * tabSignal = table.getCalibSignal(i);
-		for(size_t k(0lu); k < nbPixel; ++k){
-			b &= tabSignal[k] == 43lu*(i*nbRow + k) % 17lu;
-		}
+		
 	}
 	std::cout << "testReadBlockData : b = " << b << std::endl;
 	return b;
@@ -132,23 +168,24 @@ bool testReadBlockData(const std::string & fileName, size_t nbTotalRow, size_t o
 	table.read(fileName, offset, nbRow);
 	
 	//Get the number of rows and number of columns
-	size_t nbPixel = table.getNbPixel(), nbSlice = table.getNbSlice();
-	std::cout << "testReadBlockData : nbRow = " << nbRow << ", nbPixel = " << nbPixel << ", nbSlice = " << nbSlice << std::endl;
+	size_t nb_vs = table.getNb_vs();
+	std::cout << "testReadBlockData : nbRow = " << nbRow << ", nb_vs = " << nb_vs << std::endl;
 	bool b(true);
 	for(size_t i(0lu); i < nbRow; ++i){
-		b &= table.getEventId(i) == (i + offset);
-		b &= table.getTimestamp(i) == 2lu*(i + offset);
+		size_t eventId(0lu);
+		size_t fileId(0lu);
 		
-		unsigned short * waveform = table.getWaveform(i);
-		for(size_t j(0lu); j < nbSlice; ++j){
-			for(size_t k(0lu); k < nbPixel; ++k){
-				b &= waveform[j*nbPixel + k] == 29lu*((i + offset)*nbTotalRow +j*nbPixel + k) % 19lu;
-			}
+		float *sv = NULL;
+	
+		float energy(0.0), hfirstint(0.0), impact(0.0), alpha(0.0), x(0.0), y(0.0), Imax(0.0);
+		table.getRow(i, Imax, alpha, energy,  hfirstint, eventId, impact, sv, x, y);
+		
+		for(size_t j(0lu); j < nb_vs; ++j){
+			
+			b &= sv[i*nb_vs +j] == 29lu*(i*nbRow +j*nb_vs ) % 19lu;
+			
 		}
-		float * tabSignal = table.getCalibSignal(i);
-		for(size_t k(0lu); k < nbPixel; ++k){
-			b &= tabSignal[k] == 43lu*((i + offset)*nbTotalRow + k) % 17lu;
-		}
+	
 	}
 	std::cout << "testReadBlockData : b = " << b << std::endl;
 	return b;

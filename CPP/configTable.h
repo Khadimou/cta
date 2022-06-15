@@ -16,10 +16,6 @@
 #include <iostream>
 #include "H5Cpp.h"
 
-///Macro to describes fixed value n°0 of Tensor attribute hash
-#define TABLEEVENT_HASH_0 64lu
-
-
 ///Table of types
 class TableEvent{
 	public:
@@ -57,28 +53,26 @@ class TableEvent{
 		void openDataSetBlock(const H5::H5File & file, size_t nbMaxRowPerBlock);
 		void openDataSetBlock(const H5::Group & group, size_t nbMaxRowPerBlock);
 
-		void setRow(size_t i, size_t eventId, size_t file_id, float energy, float hfirstint, float Imax, float impact, float x, float y, char * hash, float * sv, float alpha);
-		void getRow(size_t i, size_t & eventId, size_t & file_id, float & energy, float & hfirstint, float & Imax, float & impact, float & x, float & y, char *& hash, float *& sv, float & alpha);
-		void getRow(size_t i, size_t & eventId, size_t & file_id, float & energy, float & hfirstint, float & Imax, float & impact, float & x, float & y, const char *& hash, const float *& sv, float & alpha) const;
-		void setEventId(size_t i, size_t val);
-		void setFile_id(size_t i, size_t val);
+		void setRow(size_t i, float Imax, float alpha, float energy, float hfirstint, size_t eventId, float impact, float * sv, float x, float y);
+		void getRow(size_t i, float & Imax, float & alpha, float & energy, float & hfirstint, size_t & eventId, float & impact, float *& sv, float & x, float & y);
+		void getRow(size_t i, float & Imax, float & alpha, float & energy, float & hfirstint, size_t & eventId, float & impact, const float *& sv, float & x, float & y) const;
+		void setImax(size_t i, float val);
+		void setAlpha(size_t i, float val);
 		void setEnergy(size_t i, float val);
 		void setHfirstint(size_t i, float val);
-		void setImax(size_t i, float val);
+		void setEventId(size_t i, size_t val);
 		void setImpact(size_t i, float val);
+		void setSv(size_t i, const float * tabVal);
 		void setX(size_t i, float val);
 		void setY(size_t i, float val);
-		void setHash(size_t i, const char * tabVal);
-		void setSv(size_t i, const float * tabVal);
-		void setAlpha(size_t i, float val);
-		const size_t * getEventIdFull() const;
-		size_t * getEventIdFull();
-		size_t getEventId(size_t i) const;
-		size_t & getEventId(size_t i);
-		const size_t * getFile_idFull() const;
-		size_t * getFile_idFull();
-		size_t getFile_id(size_t i) const;
-		size_t & getFile_id(size_t i);
+		const float * getImaxFull() const;
+		float * getImaxFull();
+		float getImax(size_t i) const;
+		float & getImax(size_t i);
+		const float * getAlphaFull() const;
+		float * getAlphaFull();
+		float getAlpha(size_t i) const;
+		float & getAlpha(size_t i);
 		const float * getEnergyFull() const;
 		float * getEnergyFull();
 		float getEnergy(size_t i) const;
@@ -87,14 +81,18 @@ class TableEvent{
 		float * getHfirstintFull();
 		float getHfirstint(size_t i) const;
 		float & getHfirstint(size_t i);
-		const float * getImaxFull() const;
-		float * getImaxFull();
-		float getImax(size_t i) const;
-		float & getImax(size_t i);
+		const size_t * getEventIdFull() const;
+		size_t * getEventIdFull();
+		size_t getEventId(size_t i) const;
+		size_t & getEventId(size_t i);
 		const float * getImpactFull() const;
 		float * getImpactFull();
 		float getImpact(size_t i) const;
 		float & getImpact(size_t i);
+		const float * getSvFull() const;
+		float * getSvFull();
+		const float * getSv(size_t i) const;
+		float * getSv(size_t i);
 		const float * getXFull() const;
 		float * getXFull();
 		float getX(size_t i) const;
@@ -103,53 +101,35 @@ class TableEvent{
 		float * getYFull();
 		float getY(size_t i) const;
 		float & getY(size_t i);
-		const char * getHashFull() const;
-		char * getHashFull();
-		const char * getHash(size_t i) const;
-		char * getHash(size_t i);
-		const float * getSvFull() const;
-		float * getSvFull();
-		const float * getSv(size_t i) const;
-		float * getSv(size_t i);
-		const float * getAlphaFull() const;
-		float * getAlphaFull();
-		float getAlpha(size_t i) const;
-		float & getAlpha(size_t i);
 
-		size_t getOffsetEventId() const;
-		size_t getOffsetFile_id() const;
+		size_t getOffsetImax() const;
+		size_t getOffsetAlpha() const;
 		size_t getOffsetEnergy() const;
 		size_t getOffsetHfirstint() const;
-		size_t getOffsetImax() const;
+		size_t getOffsetEventId() const;
 		size_t getOffsetImpact() const;
+		size_t getOffsetSv() const;
 		size_t getOffsetX() const;
 		size_t getOffsetY() const;
-		size_t getOffsetHash() const;
-		size_t getOffsetSv() const;
-		size_t getOffsetAlpha() const;
 		H5::CompType getCompTypeAll() const;
-		H5::CompType getCompTypeEventId() const;
-		H5::CompType getCompTypeFile_id() const;
+		H5::CompType getCompTypeImax() const;
+		H5::CompType getCompTypeAlpha() const;
 		H5::CompType getCompTypeEnergy() const;
 		H5::CompType getCompTypeHfirstint() const;
-		H5::CompType getCompTypeImax() const;
+		H5::CompType getCompTypeEventId() const;
 		H5::CompType getCompTypeImpact() const;
+		H5::CompType getCompTypeSv() const;
 		H5::CompType getCompTypeX() const;
 		H5::CompType getCompTypeY() const;
-		H5::CompType getCompTypeHash() const;
-		H5::CompType getCompTypeSv() const;
-		H5::CompType getCompTypeAlpha() const;
-		H5::DataType getTypeEventId() const;
-		H5::DataType getTypeFile_id() const;
+		H5::DataType getTypeImax() const;
+		H5::DataType getTypeAlpha() const;
 		H5::DataType getTypeEnergy() const;
 		H5::DataType getTypeHfirstint() const;
-		H5::DataType getTypeImax() const;
+		H5::DataType getTypeEventId() const;
 		H5::DataType getTypeImpact() const;
+		H5::DataType getTypeSv() const;
 		H5::DataType getTypeX() const;
 		H5::DataType getTypeY() const;
-		H5::DataType getTypeHash() const;
-		H5::DataType getTypeSv() const;
-		H5::DataType getTypeAlpha() const;
 
 		void setAllDim(size_t nb_vs);
 		void setNb_vs(size_t val);
@@ -168,7 +148,6 @@ class TableEvent{
 		void initialisationTableEvent();
 		void allocate(size_t nbRow);
 		void copyTableEvent(const TableEvent & other);
-		void readDimHash(const H5::CompType & compType);
 		void readDimSv(const H5::CompType & compType);
 
 		///Number of rows in the table TableEvent
@@ -189,18 +168,16 @@ class TableEvent{
 		///Tensor dimension nb_vs
 		size_t p_nb_vs;
 
-		///Event id
-		size_t * p_eventId;
-		size_t * p_file_id;
+		float * p_Imax;
+		float * p_alpha;
 		float * p_energy;
 		float * p_hfirstint;
-		float * p_Imax;
+		///Event id
+		size_t * p_eventId;
 		float * p_impact;
+		float * p_sv;
 		float * p_x;
 		float * p_y;
-		char * p_hash;
-		float * p_sv;
-		float * p_alpha;
 };
 
 #endif

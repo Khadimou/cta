@@ -123,6 +123,19 @@ test_table_config_full/fast:
 	$(MAKE) -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/build
 .PHONY : test_table_config_full/fast
 
+#=============================================================================
+# Target rules for targets named test_table_config
+
+# Build rule for target.
+test_table_config: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 test_table_config
+.PHONY : test_table_config
+
+# fast build rule for target.
+test_table_config/fast:
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/build
+.PHONY : test_table_config/fast
+
 configTable.o: configTable.cpp.o
 
 .PHONY : configTable.o
@@ -130,6 +143,7 @@ configTable.o: configTable.cpp.o
 # target to build an object file
 configTable.cpp.o:
 	$(MAKE) -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/configTable.cpp.o
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/configTable.cpp.o
 .PHONY : configTable.cpp.o
 
 configTable.i: configTable.cpp.i
@@ -139,6 +153,7 @@ configTable.i: configTable.cpp.i
 # target to preprocess a source file
 configTable.cpp.i:
 	$(MAKE) -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/configTable.cpp.i
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/configTable.cpp.i
 .PHONY : configTable.cpp.i
 
 configTable.s: configTable.cpp.s
@@ -148,7 +163,35 @@ configTable.s: configTable.cpp.s
 # target to generate assembly for a file
 configTable.cpp.s:
 	$(MAKE) -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/configTable.cpp.s
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/configTable.cpp.s
 .PHONY : configTable.cpp.s
+
+main.o: main.cpp.o
+
+.PHONY : main.o
+
+# target to build an object file
+main.cpp.o:
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/main.cpp.o
+.PHONY : main.cpp.o
+
+main.i: main.cpp.i
+
+.PHONY : main.i
+
+# target to preprocess a source file
+main.cpp.i:
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/main.cpp.i
+.PHONY : main.cpp.i
+
+main.s: main.cpp.s
+
+.PHONY : main.s
+
+# target to generate assembly for a file
+main.cpp.s:
+	$(MAKE) -f CMakeFiles/test_table_config.dir/build.make CMakeFiles/test_table_config.dir/main.cpp.s
+.PHONY : main.cpp.s
 
 main_full.o: main_full.cpp.o
 
@@ -186,9 +229,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... test_table_config_full"
+	@echo "... test_table_config"
 	@echo "... configTable.o"
 	@echo "... configTable.i"
 	@echo "... configTable.s"
+	@echo "... main.o"
+	@echo "... main.i"
+	@echo "... main.s"
 	@echo "... main_full.o"
 	@echo "... main_full.i"
 	@echo "... main_full.s"

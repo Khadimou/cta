@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/test_table_config.dir/configTable.cpp.o"
   "CMakeFiles/test_table_config.dir/main.cpp.o"
   "test_table_config"
   "test_table_config.pdb"

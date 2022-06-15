@@ -1,37 +1,32 @@
 
 ///Table of types
 TableEvent[gerbe]{
-	///Event id
-	size_t eventId[idevent];
 
-	//File name
-	size_t file_id[name];
+	//Intensity max
+    float Imax; 
 
-    //Energy
+	//angle
+    float alpha;
+
+	//Energy
     float energy ;
 
 	//height
     float hfirstint ;
 
-	//Intensity max
-    float Imax; 
+	///Event id
+	size_t eventId[idevent];
 
 	//Impact distance
     float impact;
+
+	//singular val
+    Tensor(float, nb_vs) sv ;
 
 	//abscisse
     float x; 
 	//ordonnee
     float y ;
-
-	//image hash
-    Tensor(char, 64) hash ;
-
-	//singular val
-    Tensor(float, nb_vs) sv ;
-
-	//angle
-    float alpha;
 }
 
 
