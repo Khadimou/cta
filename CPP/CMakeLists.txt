@@ -11,8 +11,9 @@ add_test(NAME TestTableConfig
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_table_config
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-add_definitions(-g -O3 )
-add_executable(test_table_config_full configTable.cpp main_full.cpp)
+add_definitions(-g -O3 -I/home/khadimou/usr/include/StringUtils)
+add_executable(test_table_config_full configTable.cpp main_full.cpp /home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_system.cpp
+/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_function.cpp /home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_filename.cpp)
 target_link_libraries(test_table_config_full ${HDF5_CXX_LIBRARIES} )
 
 add_test(NAME TestTableConfigFull
