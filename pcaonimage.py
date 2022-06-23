@@ -13,26 +13,60 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import tqdm
+import os
+
+#compute impact parameter
+def cip(x,y,pos_x,pos_y):
+    return np.sqrt(np.square(x-pos_x) + np.square(y-pos_y))
+    
+
+#compute alpha angle at position j
+def angle(x,y,pos_x,pos_y):
+    return np.arctan2(y-pos_y,x-pos_x) *  180 / np.pi
+
+#return the singular values
+def svd(res):
+    # Applying SVD
+    U, S, VT = np.linalg.svd(res,full_matrices=False,# It's not necessary to compute the full matrix of U or V
+        compute_uv=True) # Deterministic SVD
+
+    S = np.diag(S) #singular value matrix
+    
+    return S.diagonal()
 
 #retrieve params from our files
 def read_files(inputfile):
 
     # read 1 column using field= parameter:
     with open_file(inputfile, "r", driver="H5FD_CORE") as h5f:
-        idevent = h5f.root.Shower.gerbe.read(field='idevent')
+        idevent = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field='event_id')
         #retrieving some parameters of the simulated images
-        E = h5f.root.Shower.gerbe.read("mc_energy")
-        h = h5f.root.Shower.gerbe.read("mc_h_first_int")
-        Imax = h5f.root.Shower.gerbe.read("mc_x_max")
-        impact = h5f.root.Shower.gerbe.read("impact")
-        alpha = h5f.root.Shower.gerbe.read("alpha")
-        sv = h5f.root.Shower.gerbe.read("sv")
+        E = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field="mc_energy")
+        h = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field="mc_h_first_int")
+        Imax = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field="mc_x_max")
+        img = h5f.root.dl1.event.telescope.images.LST_LSTCam.read(field="image")
+        pos_x = h5f.root.instrument.subarray.layout.read(field="pos_x")
+        pos_y = h5f.root.instrument.subarray.layout.read(field="pos_y")
+        x = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field="x")
+        y = h5f.root.dl1.event.telescope.parameters.LST_LSTCam.read(field="y")
+        impact = cip(x,y,pos_x[0],pos_y[0])
+        alpha = angle(x,y,pos_x[0],pos_y[0])
 
-    return idevent, E, h, Imax, impact, alpha, sv
+    htable = np.fromfile("injunction_table_lst.pny", offset=8, dtype=np.uint16)
+    matrix = np.zeros(55*55)
+
+    mat = np.zeros((img.shape[0],55,55),dtype=np.float32)
+
+    for i in range(img.shape[0]):
+        matrix[htable] = img[i]
+        res = matrix.reshape(55,55)
+        mat[i] = res
+
+    return idevent, E, h, Imax, impact, alpha, mat
 
 #creating tables for datasets
 class space(IsDescription):
-    pc = Float16Col()
+    pc = Float16Col(shape=(10))
     sv = Float32Col()
     variance = Float16Col()
 
@@ -45,7 +79,29 @@ class Gerbe(IsDescription):
     sv = Float32Col(shape=55)
     alpha = Float32Col()
 
-def process_file(outputfile,images,inputfile):
+def get_sv(train_fnames):
+    nbevent = 0
+    file_offset = []
+
+    for file in tqdm.tqdm(train_fnames):
+        hfile = tables.open_file(file, "r")
+        nrows = hfile.root.dl1.event.telescope.parameters.LST_LSTCam.nrows
+        file_offset.append((file,int(nbevent), int(nbevent+nrows)))
+        nbevent = nbevent + nrows
+        hfile.close()
+
+    res = np.zeros((nbevent,10))
+    
+    for input in tqdm.tqdm(file_offset):
+        idevent, E, h, Imax, impact, alpha, mat = read_files(input[0])
+        for i,img in enumerate(mat):
+            sv = svd(img)
+            res[input[1]+i] = sv[0:10]
+    
+
+    return res
+
+def process_file(outputfile,images,inputfiles):
     
     h5file = open_file(outputfile,mode ="w", title="Projection images file")
     #create a group
@@ -55,11 +111,11 @@ def process_file(outputfile,images,inputfile):
     #now let's fill the table with its values
    
     projection = table.row #write data rows into the table
-    for i,image in enumerate(zip(*images)):
-        pc, variance, sv = pca(image)
-        projection["pc"] = pc
-        projection["variance"] = variance
-        projection["sv"] = sv
+    pc, variance, sv = pca(get_sv(inputfiles))
+    for ipc,ivar,isv in zip(pc,variance,sv):   
+        projection["pc"] = ipc
+        projection["variance"] = ivar
+        projection["sv"] = isv
         
         #insert a new projection record
 
@@ -67,55 +123,27 @@ def process_file(outputfile,images,inputfile):
 
     table.flush()
 
-    #create a group
-    group1 = h5file.create_group("/",'Shower','Shower Info')
-    #create a table
-    table1 = h5file.create_table(group1,"gerbe",Gerbe,"gerbe")
-    #now let's fill the table with its values
-    # Read the records from table "/Events/TEvent3" and select some
-    gerbe = table1.row #write data rows into the table
-    params = read_files(inputfile)
-    for i,par in enumerate(zip(*params)):
-        idevent = par[0]
-        E = par[1]
-        h = par[2]
-        Imax = par[3]
-        impact = par[4]
-        alpha = par[5]
-        val = par[6]
-        gerbe['idevent'] = idevent
-        gerbe['energy'] = E
-        gerbe['hfirstint'] = h
-        gerbe['Imax'] = Imax
-        gerbe['impact'] = impact
-        gerbe['sv'] = val
-        gerbe['alpha'] = alpha
-        #insert a new projection record
-        gerbe.append()
-    
-    table1.flush()
-
     h5file.close()
 
 def process_listfile(inputfiles,outputdir,images):
     os.makedirs(outputdir,exist_ok=True)
-    for inputfile in tqdm.tqdm(inputfiles):
-        outputfile = outputdir+"/config_"+os.path.basename(inputfile)
-        process_file(outputfile,images,inputfile)
+    
+    outputfile = outputdir+"/projection_svd.h5"
+    process_file(outputfile,images,inputfiles)
 
 # principal component analysis on images
 def pca(img):
 
     #Scale data before applying PCA
     scaling = StandardScaler()
-    data = img.data
+    data = img#.data
 
     #use fit and transform method
     scaling.fit(data)
     Scaled_data = scaling.transform(data)
 
     #set the n_components
-    principal = PCA(n_components=0.85)
+    principal = PCA(n_components=10)
     principal.fit(Scaled_data)
     x = principal.transform(Scaled_data)
     # Check the values of eigen vectors
@@ -133,7 +161,7 @@ def pca(img):
 
     scores = pd.DataFrame(data=x)
     names = []
-    for r in range(5):
+    for r in range(10):
         names.append( 'PC'+str(r) )
     scores.columns = [names]
     #print(scores)
@@ -148,24 +176,24 @@ def pca(img):
     print("somme totale variance ",df_explainedvariance[['Explained Variance']].sum())
 
      # explained variance + cumulative variance (separate plot)
-    fig = make_subplots(rows=3, cols=1)
+    # fig = make_subplots(rows=3, cols=1)
 
-    fig.add_trace(
-        go.Scatter(
-            x=df_explainedvariance['PC'],
-            y=df_explainedvariance['Cumulative Variance'],
-            marker=dict(size=15, color="LightSeaGreen")
-        ), row=1, col=1
-        )
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=df_explainedvariance['PC'],
+    #         y=df_explainedvariance['Cumulative Variance'],
+    #         marker=dict(size=15, color="LightSeaGreen")
+    #     ), row=1, col=1
+    #     )
 
-    fig.add_trace(
-        go.Bar(
-            x=df_explainedvariance['PC'],
-            y=df_explainedvariance['Explained Variance'],
-            marker=dict(color="RoyalBlue"),
-        ), row=3, col=1
-        )
-    fig.show()
+    # fig.add_trace(
+    #     go.Bar(
+    #         x=df_explainedvariance['PC'],
+    #         y=df_explainedvariance['Explained Variance'],
+    #         marker=dict(color="RoyalBlue"),
+    #     ), row=3, col=1
+    #     )
+    # fig.show()
 
     return principal.components_, explained_variance, principal.singular_values_
 
@@ -215,20 +243,6 @@ def get_img_matrix(img, nb_img):
 
     return mat
 
-#retrieve all the files from our dataset
-train_fnames = glob.glob('Data/training/*.h5',recursive=True)
-test_fnames = glob.glob('Data/testing/*.h5',recursive=True)
-images = np.zeros((0,1855))
-#mat_val = []
-
-for inputfile in tqdm.tqdm(train_fnames + test_fnames):
-    image, size = get_img(inputfile)
-    images = np.concatenate((images,image))
-    #mat_val.append( get_img_matrix(image,size))
-
-#pc, variance, sv = pca(images)
-
-
 #find the image which requires the least number of principal components 
 
 # val = number_pc(images)
@@ -238,7 +252,13 @@ for inputfile in tqdm.tqdm(train_fnames + test_fnames):
 if __name__ == '__main__':
     
     #retrieve all the files from our dataset
-    test_fnames = glob.glob('Data/testing/*.h5',recursive=True) #500 files
-    train_fnames = glob.glob('Data/training/*.h5',recursive=True) #500 files
+    train_fnames = glob.glob('Data/training/*.h5',recursive=True)
+    test_fnames = glob.glob('Data/testing/*.h5',recursive=True)
+    images = np.zeros((0,1855))
 
-    process_listfile(test_fnames+train_fnames,"./configTestFiles", images)
+    # for inputfile in tqdm.tqdm(train_fnames + test_fnames):
+    #     image, size = get_img(inputfile)
+    #     images = np.concatenate((images,image))
+
+    process_listfile(test_fnames,"./TestFiles", images)
+    process_listfile(train_fnames,"./TrainFiles", images)
