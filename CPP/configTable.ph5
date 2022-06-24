@@ -29,6 +29,13 @@ TableEvent[gerbe]{
     float y ;
 }
 
+// table of projection
+space[event/telescope/images/LST_LSTCam]{
+
+	// images
+	Tensor(float, nb_pixels) images[image];
+}
+
 
 
 

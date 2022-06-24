@@ -180,5 +180,95 @@ class TableEvent{
 		float * p_y;
 };
 
+class space{
+	public:
+		space();
+		space(const space & other);
+		virtual ~space();
+
+		space & operator = (const space & other);
+		void setTableName(const std::string & name);
+		size_t getNbEntries() const;
+		void resize(size_t nbRow);
+		void clear();
+
+		void read(const std::string & fileName);
+		void read(const H5::H5File & file);
+		void read(const H5::Group & group);
+
+		void read(const std::string & fileName, size_t offset, size_t nbRow);
+		void read(const H5::H5File & file, size_t offset, size_t nbRow);
+		void read(const H5::Group & group, size_t offset, size_t nbRow);
+
+		void write(const std::string & fileName) const;
+		void write(H5::H5File & file) const;
+		void write(H5::Group & group) const;
+
+		H5::DataSet createDataSet(const std::string & fileName, size_t nbRow) const;
+		H5::DataSet createDataSet(H5::H5File & file, size_t nbRow) const;
+		H5::DataSet createDataSet(H5::Group & group, size_t nbRow) const;
+
+		H5::DataSet openDataSet(const std::string & fileName) const;
+		H5::DataSet openDataSet(const H5::H5File & file) const;
+		H5::DataSet openDataSet(const H5::Group & group) const;
+
+		void openDataSetBlock(const std::string & fileName, size_t nbMaxRowPerBlock);
+		void openDataSetBlock(const H5::H5File & file, size_t nbMaxRowPerBlock);
+		void openDataSetBlock(const H5::Group & group, size_t nbMaxRowPerBlock);
+
+		void setRow(size_t i, float * images);
+		void getRow(size_t i, float *& images);
+		void getRow(size_t i, const float *& images) const;
+		void setImages(size_t i, const float * tabVal);
+		const float * getImagesFull() const;
+		float * getImagesFull();
+		const float * getImages(size_t i) const;
+		float * getImages(size_t i);
+
+		size_t getOffsetImages() const;
+		H5::CompType getCompTypeAll() const;
+		H5::CompType getCompTypeImages() const;
+		H5::DataType getTypeImages() const;
+
+		void setAllDim(size_t nb_pixels);
+		void setNb_pixels(size_t val);
+		size_t getNb_pixels() const;
+
+		void readDataSet(const H5::DataSet & dataset);
+		void readDataSet(const H5::DataSet & dataset, size_t offset, size_t nbRow);
+		void writeDataSet(H5::DataSet & dataset) const;
+		void openDataSetBlock(const H5::DataSet & dataset, size_t nbMaxRowPerBlock);
+		bool iterateBlock();
+		size_t getFullDataSetSize() const;
+		size_t getBlockSize() const;
+		size_t getBlockOffset() const;
+
+	private:
+		void initialisationspace();
+		void allocate(size_t nbRow);
+		void copyspace(const space & other);
+		void readDimImages(const H5::CompType & compType);
+
+		///Number of rows in the table space
+		size_t p__nbRow;
+
+		///HDF5 name of the table space
+		std::string p__tableName;
+
+		///DataSet we have to use (only with openDataSetBlock)
+		H5::DataSet p__dataset;
+		///Total number of rows in the DataSet we have to use (only with openDataSetBlock)
+		size_t p__totalDataSetRow;
+		///Size of the block to be used (only with openDataSetBlock)
+		size_t p__blockSize;
+		///Offset of the current block (only with openDataSetBlock)
+		size_t p__blockOffset;
+
+		///Tensor dimension nb_pixels
+		size_t p_nb_pixels;
+
+		float * p_images;
+};
+
 #endif
 

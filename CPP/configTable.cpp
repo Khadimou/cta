@@ -1102,3 +1102,491 @@ void TableEvent::readDimSv(const H5::CompType & compType){
 	p_nb_vs = dims[0];
 }
 
+///Constructor of the class space
+space::space(){
+	initialisationspace();
+}
+
+///Copy constructor of the class space
+/**	@param other : space to be copied
+*/
+space::space(const space & other){
+	initialisationspace();
+	copyspace(other);
+}
+
+///Destructor of the class space
+space::~space(){
+	clear();
+}
+
+///Equal operator of the class space
+/**	@param other : space to be copied
+ * 	@return copied space
+*/
+space & space::operator = (const space & other){
+	copyspace(other);
+	return *this;
+}
+
+///Set the HDF5 name of the Table space
+/**	@param name : name of the table to be saved
+*/
+void space::setTableName(const std::string & name){
+	p__tableName = name;
+}
+
+///Get the total number of rows in the current Table space
+/**	@return total number of rows
+*/
+size_t space::getNbEntries() const{
+	return p__nbRow;
+}
+
+///Resize the table space
+/*	@param nbRow : new number of rows of the Table
+*/
+void space::resize(size_t nbRow){
+	if(nbRow == p__nbRow){return;}	//Nothing to do
+	clear();
+	allocate(nbRow);
+}
+
+///Clear the table space (delete all column)
+void space::clear(){
+	if(p_images != NULL){delete [] p_images;p_images = NULL;}
+}
+
+///Read the table space from given file
+/**	@param fileName : name of the HDF5 file to be used
+*/
+void space::read(const std::string & fileName){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	read(file);
+}
+
+///Read the table space from given file
+/**	@param file : HDF5 file to be used
+*/
+void space::read(const H5::H5File & file){
+	H5::DataSet dataset = openDataSet(file);
+	readDataSet(dataset);
+}
+
+///Read the table space from given group
+/**	@param group : HDF5 group to be used
+*/
+void space::read(const H5::Group & group){
+	H5::DataSet dataset = openDataSet(group);
+	readDataSet(dataset);
+}
+
+///Read the table space from given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param offset : index of the first row the space class needs to load
+ * 	@param nbRow : number of rows the space class needs to load (Will reallocate the space is the number of rows is greater than the number off already allocated rows)
+*/
+void space::read(const std::string & fileName, size_t offset, size_t nbRow){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	read(file, offset, nbRow);
+}
+
+///Read the table space from given file
+/**	@param file : HDF5 file to be used
+ * 	@param offset : index of the first row the space class needs to load
+ * 	@param nbRow : number of rows the space class needs to load (Will reallocate the space is the number of rows is greater than the number off already allocated rows)
+*/
+void space::read(const H5::H5File & file, size_t offset, size_t nbRow){
+	H5::DataSet dataset = openDataSet(file);
+	readDataSet(dataset, offset, nbRow);
+}
+
+///Read the table space from given group
+/**	@param group : HDF5 group to be used
+ * 	@param offset : index of the first row the space class needs to load
+ * 	@param nbRow : number of rows the space class needs to load (Will reallocate the space is the number of rows is greater than the number off already allocated rows)
+*/
+void space::read(const H5::Group & group, size_t offset, size_t nbRow){
+	H5::DataSet dataset = openDataSet(group);
+	readDataSet(dataset, offset, nbRow);
+}
+
+///Create and write the table space in given file
+/**	@param fileName : name of the HDF5 file to be used
+*/
+void space::write(const std::string & fileName) const{
+	H5::H5File file(fileName, H5F_ACC_TRUNC);
+	write(file);
+}
+
+///Create and write the table space in given file
+/**	@param file : HDF5 file to be used
+*/
+void space::write(H5::H5File & file) const{
+	H5::DataSet dataset = createDataSet(file, p__nbRow);
+	writeDataSet(dataset);
+}
+
+///Create and write the table space in given file
+/**	@param group : HDF5 group to be used
+*/
+void space::write(H5::Group & group) const{
+	H5::DataSet dataset = createDataSet(group, p__nbRow);
+	writeDataSet(dataset);
+}
+
+///Create and write the table space in given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet space::createDataSet(const std::string & fileName, size_t nbRow) const{
+	H5::H5File file(fileName, H5F_ACC_TRUNC);
+	return createDataSet(file, nbRow);
+}
+
+///Create the DataSet of the table space in given file
+/**	@param file : HDF5 file to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet space::createDataSet(H5::H5File & file, size_t nbRow) const{
+	hsize_t dim[1];
+	dim[0] = nbRow;
+	H5::DataSpace space(1, dim);
+	H5::DataSet dataset = file.createDataSet(p__tableName, getCompTypeAll(), space);
+	return dataset;
+}
+
+///Create the DataSet of the table space in given group
+/**	@param group : HDF5 group to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet space::createDataSet(H5::Group & group, size_t nbRow) const{
+	hsize_t dim[1];
+	dim[0] = nbRow;
+	H5::DataSpace space(1, dim);
+	H5::DataSet dataset = group.createDataSet(p__tableName, getCompTypeAll(), space);
+	return dataset;
+}
+
+///Open and write the table space in given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet space::openDataSet(const std::string & fileName) const{
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	return openDataSet(file);
+}
+
+///Open the DataSet of the table space in given file
+/**	@param file : HDF5 file to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet space::openDataSet(const H5::H5File & file) const{
+	H5::DataSet dataset = file.openDataSet(p__tableName);
+	return dataset;
+}
+
+///Open the DataSet of the table space in given group
+/**	@param group : HDF5 group to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet space::openDataSet(const H5::Group & group) const{
+	H5::DataSet dataset = group.openDataSet(p__tableName);
+	return dataset;
+}
+
+///Open the DataSet of the table space in given file (for block usage)
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void space::openDataSetBlock(const std::string & fileName, size_t nbMaxRowPerBlock){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	openDataSetBlock(file, nbMaxRowPerBlock);
+}
+
+///Open the DataSet of the table space in given file (for block usage)
+/**	@param file : HDF5 file to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void space::openDataSetBlock(const H5::H5File & file, size_t nbMaxRowPerBlock){
+	H5::DataSet dataset = file.openDataSet(p__tableName);
+	openDataSetBlock(dataset, nbMaxRowPerBlock);
+}
+
+///Open the DataSet of the table space in given group (for block usage)
+/**	@param group : HDF5 group to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void space::openDataSetBlock(const H5::Group & group, size_t nbMaxRowPerBlock){
+	H5::DataSet dataset = group.openDataSet(p__tableName);
+	openDataSetBlock(dataset, nbMaxRowPerBlock);
+}
+
+///Set a full row of the table space
+/**	@param i : index of the row to be set
+ * 	@param images : attribute to be set
+*/
+void space::setRow(size_t i, float * images){
+	setImages(i, images);
+}
+
+///Get a full row of the table space (without tensor copy, only with pointer)
+/**	@param i : index of the row to get its values
+ * 	@param[out] images : attribute to be get
+*/
+void space::getRow(size_t i, float *& images){
+	images = getImages(i);
+}
+
+///Get a full row of the table space (without tensor copy, only with pointer)
+/**	@param i : index of the row to get its values
+ * 	@param[out] images : attribute to be get
+*/
+void space::getRow(size_t i, const float *& images) const{
+	images = getImages(i);
+}
+
+///Set the attribute images (column image)
+/**	@param i : index of the row to be used
+ * 	@param tabVal : table of value to be copied
+*/
+void space::setImages(size_t i, const float * tabVal){
+	size_t sizeRow(p_nb_pixels);
+	memcpy(p_images + i*sizeRow, tabVal, sizeRow*sizeof(float));
+}
+
+///Get the full column of the attribute images (column image)
+/**	@return pointer of the full column
+*/
+const float * space::getImagesFull() const{
+	return p_images;
+}
+
+///Get the full column of the attribute images (column image)
+/**	@return pointer of the full column
+*/
+float * space::getImagesFull(){
+	return p_images;
+}
+
+///Get the tensor i of the attribute images (column image)
+/**	@param i : index of the row to be used
+ * 	@return pointer to the corresponding tensor
+*/
+const float * space::getImages(size_t i) const{
+	return p_images + i*p_nb_pixels;
+}
+
+///Get the tensor i of the attribute images (column image)
+/**	@param i : index of the row to be used
+ * 	@return pointer to the corresponding tensor
+*/
+float * space::getImages(size_t i){
+	return p_images + i*p_nb_pixels;
+}
+
+///Set all the dimentions of the Tensor in the table
+/**	@param nb_pixels : set the tensor dimention nb_pixels
+*/
+void space::setAllDim(size_t nb_pixels){
+	setNb_pixels(nb_pixels);
+}
+
+///Set the Tensor dimention nb_pixels
+/**	@param val : set the tensor dimention nb_pixels
+*/
+void space::setNb_pixels(size_t val){
+	 p_nb_pixels = val;
+}
+
+///Get the Tensor dimention nb_pixels
+/**	@return the tensor dimention nb_pixels
+*/
+size_t space::getNb_pixels() const{
+	return p_nb_pixels;
+}
+
+///Get the offset of the attribute images
+/**	@return offset of the attribute in bytes
+*/
+size_t space::getOffsetImages() const{
+	return 0lu;
+}
+
+H5::CompType space::getCompTypeAll() const{
+	size_t sizeAll(sizeof(float)*p_nb_pixels);
+	H5::CompType typeCol(sizeAll);
+	typeCol.insertMember("image", getOffsetImages(), getTypeImages());
+	return typeCol;
+}
+
+///Get DataType of attribute images (column image)
+/**	@return DataType of the attribute images
+*/
+H5::CompType space::getCompTypeImages() const{
+	H5::CompType typeCol(sizeof(float)*p_nb_pixels);
+	typeCol.insertMember("image", 0, getTypeImages());
+	return typeCol;
+}
+
+///Get DataType of attribute images (column image)
+/**	@return DataType of the attribute images
+*/
+H5::DataType space::getTypeImages() const{
+	hsize_t dims[1];
+	dims[0] = p_nb_pixels;
+	H5::ArrayType arrayType(H5::PredType::NATIVE_FLOAT, 1, dims);
+	return arrayType;
+}
+
+///Read the given DataSet and fill the Table with it
+/**	@param dataset : dataset to be used
+*/
+void space::readDataSet(const H5::DataSet & dataset){
+	H5::CompType compType = dataset.getCompType();
+	readDimImages(compType);
+	H5::DataSpace dataSpace = dataset.getSpace();
+	size_t nbEntries(dataSpace.getSimpleExtentNpoints());
+	resize(nbEntries);
+	dataset.read(p_images, getCompTypeImages());
+}
+
+///Read the given DataSet and fill the Table with it
+/**	@param dataset : dataset to be used
+ * 	@param offset : index of the first row the space class needs to load
+ * 	@param nbRow : number of rows the space class needs to load (Will reallocate the space is the number of rows is greater than the number off already allocated rows)
+*/
+void space::readDataSet(const H5::DataSet & dataset, size_t offset, size_t nbRow){
+	H5::CompType compType = dataset.getCompType();
+	readDimImages(compType);
+	H5::DataSpace dataSpace = dataset.getSpace();
+	size_t nbEntries(dataSpace.getSimpleExtentNpoints());
+	resize(nbRow);
+	hsize_t dimBlockFile[1];
+	dimBlockFile[0] = nbEntries;
+	hsize_t offsetBlockBase[1];
+	offsetBlockBase[0] = offset;
+	hsize_t countFile[1];
+	countFile[0] = nbRow;
+	H5::DataSpace spaceBlockFile(1, dimBlockFile);
+	spaceBlockFile.selectHyperslab(H5S_SELECT_SET, countFile, offsetBlockBase);
+	hsize_t dimBlockMem[1];
+	dimBlockMem[0] = nbRow;
+	H5::DataSpace blockMem(1, dimBlockMem);
+	dataset.read(p_images, getCompTypeImages(), blockMem, spaceBlockFile);
+}
+
+///Write the given DataSet and fill the Table with it
+/**	@param[out] dataset : dataset to be modified
+*/
+void space::writeDataSet(H5::DataSet & dataset) const{
+	dataset.write(p_images, getCompTypeImages());
+}
+
+///Open the given DataSet and prepare the block usage (do not load data)
+/**	@param dataset : dataset to be loaded
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+ * 	You have to use this method with iterateBlock() and getBlockSize() methods
+*/
+void space::openDataSetBlock(const H5::DataSet & dataset, size_t nbMaxRowPerBlock){
+	p__blockOffset = 0lu;
+	H5::DataSpace spaceEvent = dataset.getSpace();
+	p__totalDataSetRow = spaceEvent.getSelectNpoints();
+	p__dataset = dataset;
+	if(p__totalDataSetRow > nbMaxRowPerBlock){	//If there are more rows than block's size
+		p__blockSize = nbMaxRowPerBlock;
+	}else{	//Otherwise we get all rows
+		p__blockSize = p__totalDataSetRow;
+	}
+}
+
+///Iterate over the blocks and load the current block
+/**	@return true if the current block has been loaded, false if we reach the end of the blocks
+*/
+bool space::iterateBlock(){
+	if(p__blockOffset >= p__totalDataSetRow){p__blockOffset = 0lu;return false;}	//We reach the end of the DataSet
+	if(p__blockOffset + p__blockSize > p__totalDataSetRow){
+		p__blockSize = p__totalDataSetRow - p__blockOffset;
+	}
+	readDataSet(p__dataset, p__blockOffset, p__blockSize);	//Let's read the current block
+	p__blockOffset += p__blockSize;				//Let's increment the offset
+	return true;
+}
+
+///Get the full size of the loaded DataSet
+/**	@return full size of the loaded DataSet
+*/
+size_t space::getFullDataSetSize() const{
+	return p__totalDataSetRow;
+}
+
+///Get the size of the current block
+/**	@return size of the currently loaded block
+*/
+size_t space::getBlockSize() const{
+	return p__blockSize;
+}
+
+///Get the offset of the current block
+/**	@return offset of the currently loaded block
+*/
+size_t space::getBlockOffset() const{
+	return p__blockOffset;
+}
+
+///Initialises the table space
+void space::initialisationspace(){
+	p__nbRow = 0lu;
+	p__tableName = "event/telescope/images/LST_LSTCam";
+	p_nb_pixels = 0lu;
+	p_images = NULL;
+}
+
+///Allocate the table space (delete all column)
+/**	@param nbRow : new number of rows of the Table
+*/
+void space::allocate(size_t nbRow){
+	p__nbRow = nbRow;
+	if(p__nbRow == 0lu){
+		initialisationspace();
+		return;
+	}
+	p_images = new float[p__nbRow*p_nb_pixels];
+}
+
+///Copy function of the class space
+/**	@param other : space to be copied
+*/
+void space::copyspace(const space & other){
+	//Let's copy proper attributes of the space
+	p__tableName = other.p__tableName;
+	p__totalDataSetRow = other.p__totalDataSetRow;
+	p__blockSize = other.p__blockSize;
+	p__blockOffset = other.p__blockOffset;
+	//Let's copy extra dimension of the space
+	p_nb_pixels = other.p_nb_pixels;
+	//Let's allocate columns of space
+	allocate(other.p__nbRow);	//Let's allocate properly everything
+	//Let's copy columns of space
+	memcpy(p_images, other.p_images, sizeof(float)*p__nbRow*p_nb_pixels);
+}
+
+///Update the dimentions of the tensor images (column 'image')
+/**	@param compType : main type to be used to update the tensor dimentions*/
+void space::readDimImages(const H5::CompType & compType){
+	int indexCol = compType.getMemberIndex("image");
+	H5::ArrayType arrayType = compType.getMemberArrayType(indexCol);
+	//Check if the number of dientions matches
+	if(arrayType.getArrayNDims() != 1){
+		std::stringstream strError;
+		strError << "space::readDimImages wrong number of dimentions : expect 1 but "<< arrayType.getArrayNDims() <<" provided from the file" << std::endl;
+		throw std::runtime_error(strError.str());
+	}
+	hsize_t dims[1];
+	arrayType.getArrayDims(dims);
+	p_nb_pixels = dims[0];
+}
+

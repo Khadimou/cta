@@ -6,6 +6,14 @@
 
 #IncludeRegexTransform: 
 
+/home/khadimou/Stage/CPP/configTable.cpp
+string.h
+-
+sstream
+-
+configTable.h
+/home/khadimou/Stage/CPP/configTable.h
+
 /home/khadimou/Stage/CPP/configTable.h
 iostream
 -

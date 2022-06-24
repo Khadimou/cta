@@ -1,0 +1,30 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/khadimou/Stage/CPP/build'
+/usr/bin/cmake -S/home/khadimou/Stage/CPP -B/home/khadimou/Stage/CPP/build --check-build-system CMakeFiles/Makefile.cmake 0
+/usr/bin/cmake -E cmake_progress_start /home/khadimou/Stage/CPP/build/CMakeFiles /home/khadimou/Stage/CPP/build/CMakeFiles/progress.marks
+make -f CMakeFiles/Makefile2 all
+make[1]: Entering directory '/home/khadimou/Stage/CPP/build'
+make -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/depend
+make[2]: Entering directory '/home/khadimou/Stage/CPP/build'
+cd /home/khadimou/Stage/CPP/build && /usr/bin/cmake -E cmake_depends "Unix Makefiles" /home/khadimou/Stage/CPP /home/khadimou/Stage/CPP /home/khadimou/Stage/CPP/build /home/khadimou/Stage/CPP/build /home/khadimou/Stage/CPP/build/CMakeFiles/test_table_config_full.dir/DependInfo.cmake --color=
+make[2]: Leaving directory '/home/khadimou/Stage/CPP/build'
+make -f CMakeFiles/test_table_config_full.dir/build.make CMakeFiles/test_table_config_full.dir/build
+make[2]: Entering directory '/home/khadimou/Stage/CPP/build'
+/usr/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=1 "Building CXX object CMakeFiles/test_table_config_full.dir/configTable.cpp.o"
+/usr/bin/c++   -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4  -g -O3 -I/home/khadimou/usr/include/StringUtils -o CMakeFiles/test_table_config_full.dir/configTable.cpp.o -c /home/khadimou/Stage/CPP/configTable.cpp
+/usr/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=2 "Building CXX object CMakeFiles/test_table_config_full.dir/main_full.cpp.o"
+/usr/bin/c++   -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4  -g -O3 -I/home/khadimou/usr/include/StringUtils -o CMakeFiles/test_table_config_full.dir/main_full.cpp.o -c /home/khadimou/Stage/CPP/main_full.cpp
+/usr/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=3 "Building CXX object CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_system.cpp.o"
+/usr/bin/c++   -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4  -g -O3 -I/home/khadimou/usr/include/StringUtils -o CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_system.cpp.o -c /home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_system.cpp
+/usr/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=4 "Building CXX object CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_function.cpp.o"
+/usr/bin/c++   -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4  -g -O3 -I/home/khadimou/usr/include/StringUtils -o CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_function.cpp.o -c /home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_function.cpp
+/usr/bin/cmake -E cmake_echo_color --switch= --green --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=5 "Building CXX object CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_filename.cpp.o"
+/usr/bin/c++   -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4  -g -O3 -I/home/khadimou/usr/include/StringUtils -o CMakeFiles/test_table_config_full.dir/home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_filename.cpp.o -c /home/khadimou/PhoenixHDF5/tmp_project/StringUtils/src/string_filename.cpp
+/usr/bin/cmake -E cmake_echo_color --switch= --green --bold --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=6 "Linking CXX executable test_table_config_full"
+/usr/bin/cmake -E cmake_link_script CMakeFiles/test_table_config_full.dir/link.txt --verbose=
+make[2]: Leaving directory '/home/khadimou/Stage/CPP/build'
+/usr/bin/cmake -E cmake_echo_color --switch= --progress-dir=/home/khadimou/Stage/CPP/build/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target test_table_config_full"
+make[1]: Leaving directory '/home/khadimou/Stage/CPP/build'
+/usr/bin/cmake -E cmake_progress_start /home/khadimou/Stage/CPP/build/CMakeFiles 0
+make: Leaving directory '/home/khadimou/Stage/CPP/build'
+ 

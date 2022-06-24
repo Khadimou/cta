@@ -6,5 +6,5 @@ CXX_FLAGS =   -g -O3 -I/home/khadimou/usr/include/StringUtils
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial 
+CXX_INCLUDES = -I/home/khadimou/Stage/CPP/build -I/usr/include/hdf5/serial -isystem /usr/include/opencv4 
 
