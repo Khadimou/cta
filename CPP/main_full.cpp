@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
+#include <numeric>
+#include <functional>
 
 using namespace cv;
 
@@ -64,11 +66,23 @@ size_t get_nrows(const std::string &fname){
 /**	@param fileName : name of the file to be written
  * 	@return true on success, false otherwise
 */
-bool testWriteData(const std::string & fileName){
-	TableEvent table;
-	size_t nbRow(table.getNbEntries()),  nb_vs(55lu);
-	table.setAllDim(nb_vs);
-	table.resize(nbRow);
+bool testWriteData(const std::string & fileName,const Mat& sv, const Mat& psv, const Mat& pc){
+	componentsPrincipal table;
+	size_t  nb_pc(10lu);
+	table.setAllDim(nb_pc);
+	table.resize(nb_pc);
+
+	for(size_t i(0lu);i<nb_pc;++i){
+		table.setSv(i, sv.at<float>(i,i));
+		table.setPsv(i, psv.at<float>(i,i));
+		
+		float *my_pc = table.getPc(i);
+		
+		my_pc[i] = pc.at<float>(i,i);
+		
+		table.setPc(i, my_pc);
+
+	}
 	
 	//Now let's open a file
 	H5::H5File file(fileName, H5F_ACC_TRUNC);
@@ -152,10 +166,25 @@ int main(int argc, char** argv){
 	// 	std::cout << "file offset " << std::get<1>(all_files[k][0]) << "\n";
 	// }
 
-	PCA pc = compressPCA(img_matrix,55);
+	PCA pc = compressPCA(img_matrix,10);
 	SVD::compute(img_matrix, sv, SVD::NO_UV);
-	std::cout << "singular values " << sv << "\n";
-	std::cout << "pca singular values " << pc.eigenvalues << "\n";
+	// std::cout << "singular values \n" << sv.rowRange(0,10) << std::endl;
+	// std::cout << "pca singular values \n" << pc.eigenvalues << std::endl;
+	//std::cout << "pca singular vectors \n" << pc.eigenvectors.rowRange(0,10) << std::endl;
+	//testWriteData("output.h5",sv.rowRange(0,10),pc.eigenvalues,pc.eigenvectors);
+	// explained variance
+	float tot {0.};
+	for(size_t i(0lu);i<10;++i){
+		tot += pc.eigenvalues.at<float>(i,i);
+	}
+	
+	std::vector<float> var_exp;
+	for (size_t i(0lu); i<10;++i){
+		var_exp.push_back( (pc.eigenvalues.at<float>(i,i) / tot)*100 );
+	}
+	std::vector<float> cum_var_exp(var_exp.size());
+	std::partial_sum(var_exp.begin(),var_exp.end(),cum_var_exp.begin());
+	for(auto s: cum_var_exp) std::cout << s << std::endl;
 
 	return b-1;
 }

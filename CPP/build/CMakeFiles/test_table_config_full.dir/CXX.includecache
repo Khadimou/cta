@@ -25,6 +25,10 @@ opencv2/core.hpp
 -
 opencv2/core/mat.hpp
 -
+numeric
+-
+functional
+-
 
 /usr/include/hdf5/serial/H5ACpublic.h
 H5public.h

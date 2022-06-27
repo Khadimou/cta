@@ -1590,3 +1590,641 @@ void space::readDimImages(const H5::CompType & compType){
 	p_nb_pixels = dims[0];
 }
 
+///Constructor of the class componentsPrincipal
+componentsPrincipal::componentsPrincipal(){
+	initialisationcomponentsPrincipal();
+}
+
+///Copy constructor of the class componentsPrincipal
+/**	@param other : componentsPrincipal to be copied
+*/
+componentsPrincipal::componentsPrincipal(const componentsPrincipal & other){
+	initialisationcomponentsPrincipal();
+	copycomponentsPrincipal(other);
+}
+
+///Destructor of the class componentsPrincipal
+componentsPrincipal::~componentsPrincipal(){
+	clear();
+}
+
+///Equal operator of the class componentsPrincipal
+/**	@param other : componentsPrincipal to be copied
+ * 	@return copied componentsPrincipal
+*/
+componentsPrincipal & componentsPrincipal::operator = (const componentsPrincipal & other){
+	copycomponentsPrincipal(other);
+	return *this;
+}
+
+///Set the HDF5 name of the Table componentsPrincipal
+/**	@param name : name of the table to be saved
+*/
+void componentsPrincipal::setTableName(const std::string & name){
+	p__tableName = name;
+}
+
+///Get the total number of rows in the current Table componentsPrincipal
+/**	@return total number of rows
+*/
+size_t componentsPrincipal::getNbEntries() const{
+	return p__nbRow;
+}
+
+///Resize the table componentsPrincipal
+/*	@param nbRow : new number of rows of the Table
+*/
+void componentsPrincipal::resize(size_t nbRow){
+	if(nbRow == p__nbRow){return;}	//Nothing to do
+	clear();
+	allocate(nbRow);
+}
+
+///Clear the table componentsPrincipal (delete all column)
+void componentsPrincipal::clear(){
+	if(p_pc != NULL){delete [] p_pc;p_pc = NULL;}
+	if(p_sv != NULL){delete [] p_sv;p_sv = NULL;}
+	if(p_psv != NULL){delete [] p_psv;p_psv = NULL;}
+}
+
+///Read the table componentsPrincipal from given file
+/**	@param fileName : name of the HDF5 file to be used
+*/
+void componentsPrincipal::read(const std::string & fileName){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	read(file);
+}
+
+///Read the table componentsPrincipal from given file
+/**	@param file : HDF5 file to be used
+*/
+void componentsPrincipal::read(const H5::H5File & file){
+	H5::DataSet dataset = openDataSet(file);
+	readDataSet(dataset);
+}
+
+///Read the table componentsPrincipal from given group
+/**	@param group : HDF5 group to be used
+*/
+void componentsPrincipal::read(const H5::Group & group){
+	H5::DataSet dataset = openDataSet(group);
+	readDataSet(dataset);
+}
+
+///Read the table componentsPrincipal from given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param offset : index of the first row the componentsPrincipal class needs to load
+ * 	@param nbRow : number of rows the componentsPrincipal class needs to load (Will reallocate the componentsPrincipal is the number of rows is greater than the number off already allocated rows)
+*/
+void componentsPrincipal::read(const std::string & fileName, size_t offset, size_t nbRow){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	read(file, offset, nbRow);
+}
+
+///Read the table componentsPrincipal from given file
+/**	@param file : HDF5 file to be used
+ * 	@param offset : index of the first row the componentsPrincipal class needs to load
+ * 	@param nbRow : number of rows the componentsPrincipal class needs to load (Will reallocate the componentsPrincipal is the number of rows is greater than the number off already allocated rows)
+*/
+void componentsPrincipal::read(const H5::H5File & file, size_t offset, size_t nbRow){
+	H5::DataSet dataset = openDataSet(file);
+	readDataSet(dataset, offset, nbRow);
+}
+
+///Read the table componentsPrincipal from given group
+/**	@param group : HDF5 group to be used
+ * 	@param offset : index of the first row the componentsPrincipal class needs to load
+ * 	@param nbRow : number of rows the componentsPrincipal class needs to load (Will reallocate the componentsPrincipal is the number of rows is greater than the number off already allocated rows)
+*/
+void componentsPrincipal::read(const H5::Group & group, size_t offset, size_t nbRow){
+	H5::DataSet dataset = openDataSet(group);
+	readDataSet(dataset, offset, nbRow);
+}
+
+///Create and write the table componentsPrincipal in given file
+/**	@param fileName : name of the HDF5 file to be used
+*/
+void componentsPrincipal::write(const std::string & fileName) const{
+	H5::H5File file(fileName, H5F_ACC_TRUNC);
+	write(file);
+}
+
+///Create and write the table componentsPrincipal in given file
+/**	@param file : HDF5 file to be used
+*/
+void componentsPrincipal::write(H5::H5File & file) const{
+	H5::DataSet dataset = createDataSet(file, p__nbRow);
+	writeDataSet(dataset);
+}
+
+///Create and write the table componentsPrincipal in given file
+/**	@param group : HDF5 group to be used
+*/
+void componentsPrincipal::write(H5::Group & group) const{
+	H5::DataSet dataset = createDataSet(group, p__nbRow);
+	writeDataSet(dataset);
+}
+
+///Create and write the table componentsPrincipal in given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet componentsPrincipal::createDataSet(const std::string & fileName, size_t nbRow) const{
+	H5::H5File file(fileName, H5F_ACC_TRUNC);
+	return createDataSet(file, nbRow);
+}
+
+///Create the DataSet of the table componentsPrincipal in given file
+/**	@param file : HDF5 file to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet componentsPrincipal::createDataSet(H5::H5File & file, size_t nbRow) const{
+	hsize_t dim[1];
+	dim[0] = nbRow;
+	H5::DataSpace space(1, dim);
+	H5::DataSet dataset = file.createDataSet(p__tableName, getCompTypeAll(), space);
+	return dataset;
+}
+
+///Create the DataSet of the table componentsPrincipal in given group
+/**	@param group : HDF5 group to be used
+ * 	@param nbRow : full number of rows in the DataSet
+ * 	@return created DataSet
+*/
+H5::DataSet componentsPrincipal::createDataSet(H5::Group & group, size_t nbRow) const{
+	hsize_t dim[1];
+	dim[0] = nbRow;
+	H5::DataSpace space(1, dim);
+	H5::DataSet dataset = group.createDataSet(p__tableName, getCompTypeAll(), space);
+	return dataset;
+}
+
+///Open and write the table componentsPrincipal in given file
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet componentsPrincipal::openDataSet(const std::string & fileName) const{
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	return openDataSet(file);
+}
+
+///Open the DataSet of the table componentsPrincipal in given file
+/**	@param file : HDF5 file to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet componentsPrincipal::openDataSet(const H5::H5File & file) const{
+	H5::DataSet dataset = file.openDataSet(p__tableName);
+	return dataset;
+}
+
+///Open the DataSet of the table componentsPrincipal in given group
+/**	@param group : HDF5 group to be used
+ * 	@return opened DataSet
+*/
+H5::DataSet componentsPrincipal::openDataSet(const H5::Group & group) const{
+	H5::DataSet dataset = group.openDataSet(p__tableName);
+	return dataset;
+}
+
+///Open the DataSet of the table componentsPrincipal in given file (for block usage)
+/**	@param fileName : name of the HDF5 file to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void componentsPrincipal::openDataSetBlock(const std::string & fileName, size_t nbMaxRowPerBlock){
+	H5::H5File file(fileName, H5F_ACC_RDONLY);
+	openDataSetBlock(file, nbMaxRowPerBlock);
+}
+
+///Open the DataSet of the table componentsPrincipal in given file (for block usage)
+/**	@param file : HDF5 file to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void componentsPrincipal::openDataSetBlock(const H5::H5File & file, size_t nbMaxRowPerBlock){
+	H5::DataSet dataset = file.openDataSet(p__tableName);
+	openDataSetBlock(dataset, nbMaxRowPerBlock);
+}
+
+///Open the DataSet of the table componentsPrincipal in given group (for block usage)
+/**	@param group : HDF5 group to be used
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+*/
+void componentsPrincipal::openDataSetBlock(const H5::Group & group, size_t nbMaxRowPerBlock){
+	H5::DataSet dataset = group.openDataSet(p__tableName);
+	openDataSetBlock(dataset, nbMaxRowPerBlock);
+}
+
+///Set a full row of the table componentsPrincipal
+/**	@param i : index of the row to be set
+ * 	@param pc : attribute to be set
+ * 	@param sv : attribute to be set
+ * 	@param psv : attribute to be set
+*/
+void componentsPrincipal::setRow(size_t i, float * pc, float sv, float psv){
+	setPc(i, pc);
+	setSv(i, sv);
+	setPsv(i, psv);
+}
+
+///Get a full row of the table componentsPrincipal (without tensor copy, only with pointer)
+/**	@param i : index of the row to get its values
+ * 	@param[out] pc : attribute to be get
+ * 	@param[out] sv : attribute to be get
+ * 	@param[out] psv : attribute to be get
+*/
+void componentsPrincipal::getRow(size_t i, float *& pc, float & sv, float & psv){
+	pc = getPc(i);
+	sv = getSv(i);
+	psv = getPsv(i);
+}
+
+///Get a full row of the table componentsPrincipal (without tensor copy, only with pointer)
+/**	@param i : index of the row to get its values
+ * 	@param[out] pc : attribute to be get
+ * 	@param[out] sv : attribute to be get
+ * 	@param[out] psv : attribute to be get
+*/
+void componentsPrincipal::getRow(size_t i, const float *& pc, float & sv, float & psv) const{
+	pc = getPc(i);
+	sv = getSv(i);
+	psv = getPsv(i);
+}
+
+///Set the attribute pc (column pc)
+/**	@param i : index of the row to be used
+ * 	@param tabVal : table of value to be copied
+*/
+void componentsPrincipal::setPc(size_t i, const float * tabVal){
+	size_t sizeRow(p_nb_pc);
+	memcpy(p_pc + i*sizeRow, tabVal, sizeRow*sizeof(float));
+}
+
+///Set the attribute sv (column sv)
+/**	@param i : index of the row to be used
+ * 	@param val : value to be copied
+*/
+void componentsPrincipal::setSv(size_t i, float val){
+	p_sv[i] = val;
+}
+
+///Set the attribute psv (column psv)
+/**	@param i : index of the row to be used
+ * 	@param val : value to be copied
+*/
+void componentsPrincipal::setPsv(size_t i, float val){
+	p_psv[i] = val;
+}
+
+///Get the full column of the attribute pc (column pc)
+/**	@return pointer of the full column
+*/
+const float * componentsPrincipal::getPcFull() const{
+	return p_pc;
+}
+
+///Get the full column of the attribute pc (column pc)
+/**	@return pointer of the full column
+*/
+float * componentsPrincipal::getPcFull(){
+	return p_pc;
+}
+
+///Get the tensor i of the attribute pc (column pc)
+/**	@param i : index of the row to be used
+ * 	@return pointer to the corresponding tensor
+*/
+const float * componentsPrincipal::getPc(size_t i) const{
+	return p_pc + i*p_nb_pc;
+}
+
+///Get the tensor i of the attribute pc (column pc)
+/**	@param i : index of the row to be used
+ * 	@return pointer to the corresponding tensor
+*/
+float * componentsPrincipal::getPc(size_t i){
+	return p_pc + i*p_nb_pc;
+}
+
+///Get the full column of the attribute sv (column sv)
+/**	@return pointer of the full column
+*/
+const float * componentsPrincipal::getSvFull() const{
+	return p_sv;
+}
+
+///Get the full column of the attribute sv (column sv)
+/**	@return pointer of the full column
+*/
+float * componentsPrincipal::getSvFull(){
+	return p_sv;
+}
+
+///Get the value i of the attribute sv (column sv)
+/**	@param i : index of the row to be used
+ * 	@return corresponding value
+*/
+float componentsPrincipal::getSv(size_t i) const{
+	return p_sv[i];
+}
+
+///Get the value i of the attribute sv (column sv)
+/**	@param i : index of the row to be used
+ * 	@return corresponding value
+*/
+float & componentsPrincipal::getSv(size_t i){
+	return p_sv[i];
+}
+
+///Get the full column of the attribute psv (column psv)
+/**	@return pointer of the full column
+*/
+const float * componentsPrincipal::getPsvFull() const{
+	return p_psv;
+}
+
+///Get the full column of the attribute psv (column psv)
+/**	@return pointer of the full column
+*/
+float * componentsPrincipal::getPsvFull(){
+	return p_psv;
+}
+
+///Get the value i of the attribute psv (column psv)
+/**	@param i : index of the row to be used
+ * 	@return corresponding value
+*/
+float componentsPrincipal::getPsv(size_t i) const{
+	return p_psv[i];
+}
+
+///Get the value i of the attribute psv (column psv)
+/**	@param i : index of the row to be used
+ * 	@return corresponding value
+*/
+float & componentsPrincipal::getPsv(size_t i){
+	return p_psv[i];
+}
+
+///Set all the dimentions of the Tensor in the table
+/**	@param nb_pc : set the tensor dimention nb_pc
+*/
+void componentsPrincipal::setAllDim(size_t nb_pc){
+	setNb_pc(nb_pc);
+}
+
+///Set the Tensor dimention nb_pc
+/**	@param val : set the tensor dimention nb_pc
+*/
+void componentsPrincipal::setNb_pc(size_t val){
+	 p_nb_pc = val;
+}
+
+///Get the Tensor dimention nb_pc
+/**	@return the tensor dimention nb_pc
+*/
+size_t componentsPrincipal::getNb_pc() const{
+	return p_nb_pc;
+}
+
+///Get the offset of the attribute pc
+/**	@return offset of the attribute in bytes
+*/
+size_t componentsPrincipal::getOffsetPc() const{
+	return 0lu;
+}
+
+///Get the offset of the attribute sv
+/**	@return offset of the attribute in bytes
+*/
+size_t componentsPrincipal::getOffsetSv() const{
+	return getOffsetPc() + sizeof(float)*p_nb_pc;
+}
+
+///Get the offset of the attribute psv
+/**	@return offset of the attribute in bytes
+*/
+size_t componentsPrincipal::getOffsetPsv() const{
+	return getOffsetSv() + sizeof(float);
+}
+
+H5::CompType componentsPrincipal::getCompTypeAll() const{
+	size_t sizeAll(sizeof(float)*p_nb_pc + sizeof(float) + sizeof(float));
+	H5::CompType typeCol(sizeAll);
+	typeCol.insertMember("pc", getOffsetPc(), getTypePc());
+	typeCol.insertMember("sv", getOffsetSv(), getTypeSv());
+	typeCol.insertMember("psv", getOffsetPsv(), getTypePsv());
+	return typeCol;
+}
+
+///Get DataType of attribute pc (column pc)
+/**	@return DataType of the attribute pc
+*/
+H5::CompType componentsPrincipal::getCompTypePc() const{
+	H5::CompType typeCol(sizeof(float)*p_nb_pc);
+	typeCol.insertMember("pc", 0, getTypePc());
+	return typeCol;
+}
+
+///Get DataType of attribute sv (column sv)
+/**	@return DataType of the attribute sv
+*/
+H5::CompType componentsPrincipal::getCompTypeSv() const{
+	H5::CompType typeCol(sizeof(float));
+	typeCol.insertMember("sv", 0, getTypeSv());
+	return typeCol;
+}
+
+///Get DataType of attribute psv (column psv)
+/**	@return DataType of the attribute psv
+*/
+H5::CompType componentsPrincipal::getCompTypePsv() const{
+	H5::CompType typeCol(sizeof(float));
+	typeCol.insertMember("psv", 0, getTypePsv());
+	return typeCol;
+}
+
+///Get DataType of attribute pc (column pc)
+/**	@return DataType of the attribute pc
+*/
+H5::DataType componentsPrincipal::getTypePc() const{
+	hsize_t dims[1];
+	dims[0] = p_nb_pc;
+	H5::ArrayType arrayType(H5::PredType::NATIVE_FLOAT, 1, dims);
+	return arrayType;
+}
+
+///Get DataType of attribute sv (column sv)
+/**	@return DataType of the attribute sv
+*/
+H5::DataType componentsPrincipal::getTypeSv() const{
+	return H5::PredType::NATIVE_FLOAT;
+}
+
+///Get DataType of attribute psv (column psv)
+/**	@return DataType of the attribute psv
+*/
+H5::DataType componentsPrincipal::getTypePsv() const{
+	return H5::PredType::NATIVE_FLOAT;
+}
+
+///Read the given DataSet and fill the Table with it
+/**	@param dataset : dataset to be used
+*/
+void componentsPrincipal::readDataSet(const H5::DataSet & dataset){
+	H5::CompType compType = dataset.getCompType();
+	readDimPc(compType);
+	H5::DataSpace dataSpace = dataset.getSpace();
+	size_t nbEntries(dataSpace.getSimpleExtentNpoints());
+	resize(nbEntries);
+	dataset.read(p_pc, getCompTypePc());
+	dataset.read(p_sv, getCompTypeSv());
+	dataset.read(p_psv, getCompTypePsv());
+}
+
+///Read the given DataSet and fill the Table with it
+/**	@param dataset : dataset to be used
+ * 	@param offset : index of the first row the componentsPrincipal class needs to load
+ * 	@param nbRow : number of rows the componentsPrincipal class needs to load (Will reallocate the componentsPrincipal is the number of rows is greater than the number off already allocated rows)
+*/
+void componentsPrincipal::readDataSet(const H5::DataSet & dataset, size_t offset, size_t nbRow){
+	H5::CompType compType = dataset.getCompType();
+	readDimPc(compType);
+	H5::DataSpace dataSpace = dataset.getSpace();
+	size_t nbEntries(dataSpace.getSimpleExtentNpoints());
+	resize(nbRow);
+	hsize_t dimBlockFile[1];
+	dimBlockFile[0] = nbEntries;
+	hsize_t offsetBlockBase[1];
+	offsetBlockBase[0] = offset;
+	hsize_t countFile[1];
+	countFile[0] = nbRow;
+	H5::DataSpace spaceBlockFile(1, dimBlockFile);
+	spaceBlockFile.selectHyperslab(H5S_SELECT_SET, countFile, offsetBlockBase);
+	hsize_t dimBlockMem[1];
+	dimBlockMem[0] = nbRow;
+	H5::DataSpace blockMem(1, dimBlockMem);
+	dataset.read(p_pc, getCompTypePc(), blockMem, spaceBlockFile);
+	dataset.read(p_sv, getCompTypeSv(), blockMem, spaceBlockFile);
+	dataset.read(p_psv, getCompTypePsv(), blockMem, spaceBlockFile);
+}
+
+///Write the given DataSet and fill the Table with it
+/**	@param[out] dataset : dataset to be modified
+*/
+void componentsPrincipal::writeDataSet(H5::DataSet & dataset) const{
+	dataset.write(p_pc, getCompTypePc());
+	dataset.write(p_sv, getCompTypeSv());
+	dataset.write(p_psv, getCompTypePsv());
+}
+
+///Open the given DataSet and prepare the block usage (do not load data)
+/**	@param dataset : dataset to be loaded
+ * 	@param nbMaxRowPerBlock : maximum number of rows in the block
+ * 	You have to use this method with iterateBlock() and getBlockSize() methods
+*/
+void componentsPrincipal::openDataSetBlock(const H5::DataSet & dataset, size_t nbMaxRowPerBlock){
+	p__blockOffset = 0lu;
+	H5::DataSpace spaceEvent = dataset.getSpace();
+	p__totalDataSetRow = spaceEvent.getSelectNpoints();
+	p__dataset = dataset;
+	if(p__totalDataSetRow > nbMaxRowPerBlock){	//If there are more rows than block's size
+		p__blockSize = nbMaxRowPerBlock;
+	}else{	//Otherwise we get all rows
+		p__blockSize = p__totalDataSetRow;
+	}
+}
+
+///Iterate over the blocks and load the current block
+/**	@return true if the current block has been loaded, false if we reach the end of the blocks
+*/
+bool componentsPrincipal::iterateBlock(){
+	if(p__blockOffset >= p__totalDataSetRow){p__blockOffset = 0lu;return false;}	//We reach the end of the DataSet
+	if(p__blockOffset + p__blockSize > p__totalDataSetRow){
+		p__blockSize = p__totalDataSetRow - p__blockOffset;
+	}
+	readDataSet(p__dataset, p__blockOffset, p__blockSize);	//Let's read the current block
+	p__blockOffset += p__blockSize;				//Let's increment the offset
+	return true;
+}
+
+///Get the full size of the loaded DataSet
+/**	@return full size of the loaded DataSet
+*/
+size_t componentsPrincipal::getFullDataSetSize() const{
+	return p__totalDataSetRow;
+}
+
+///Get the size of the current block
+/**	@return size of the currently loaded block
+*/
+size_t componentsPrincipal::getBlockSize() const{
+	return p__blockSize;
+}
+
+///Get the offset of the current block
+/**	@return offset of the currently loaded block
+*/
+size_t componentsPrincipal::getBlockOffset() const{
+	return p__blockOffset;
+}
+
+///Initialises the table componentsPrincipal
+void componentsPrincipal::initialisationcomponentsPrincipal(){
+	p__nbRow = 0lu;
+	p__tableName = "componentsPrincipal";
+	p_nb_pc = 0lu;
+	p_pc = NULL;
+	p_sv = NULL;
+	p_psv = NULL;
+}
+
+///Allocate the table componentsPrincipal (delete all column)
+/**	@param nbRow : new number of rows of the Table
+*/
+void componentsPrincipal::allocate(size_t nbRow){
+	p__nbRow = nbRow;
+	if(p__nbRow == 0lu){
+		initialisationcomponentsPrincipal();
+		return;
+	}
+	p_pc = new float[p__nbRow*p_nb_pc];
+	p_sv = new float[p__nbRow];
+	p_psv = new float[p__nbRow];
+}
+
+///Copy function of the class componentsPrincipal
+/**	@param other : componentsPrincipal to be copied
+*/
+void componentsPrincipal::copycomponentsPrincipal(const componentsPrincipal & other){
+	//Let's copy proper attributes of the componentsPrincipal
+	p__tableName = other.p__tableName;
+	p__totalDataSetRow = other.p__totalDataSetRow;
+	p__blockSize = other.p__blockSize;
+	p__blockOffset = other.p__blockOffset;
+	//Let's copy extra dimension of the componentsPrincipal
+	p_nb_pc = other.p_nb_pc;
+	//Let's allocate columns of componentsPrincipal
+	allocate(other.p__nbRow);	//Let's allocate properly everything
+	//Let's copy columns of componentsPrincipal
+	memcpy(p_pc, other.p_pc, sizeof(float)*p__nbRow*p_nb_pc);
+	memcpy(p_sv, other.p_sv, sizeof(float)*p__nbRow);
+	memcpy(p_psv, other.p_psv, sizeof(float)*p__nbRow);
+}
+
+///Update the dimentions of the tensor pc (column 'pc')
+/**	@param compType : main type to be used to update the tensor dimentions*/
+void componentsPrincipal::readDimPc(const H5::CompType & compType){
+	int indexCol = compType.getMemberIndex("pc");
+	H5::ArrayType arrayType = compType.getMemberArrayType(indexCol);
+	//Check if the number of dientions matches
+	if(arrayType.getArrayNDims() != 1){
+		std::stringstream strError;
+		strError << "componentsPrincipal::readDimPc wrong number of dimentions : expect 1 but "<< arrayType.getArrayNDims() <<" provided from the file" << std::endl;
+		throw std::runtime_error(strError.str());
+	}
+	hsize_t dims[1];
+	arrayType.getArrayDims(dims);
+	p_nb_pc = dims[0];
+}
+

@@ -36,6 +36,17 @@ space[event/telescope/images/LST_LSTCam]{
 	Tensor(float, nb_pixels) images[image];
 }
 
+//table of principal components
+componentsPrincipal
+{
+	// principal components
+	Tensor(float, nb_pc) pc;
+	// singular values
+	float sv;
+	// principal singular values
+	float psv;
+}
+
 
 
 

@@ -270,5 +270,113 @@ class space{
 		float * p_images;
 };
 
+class componentsPrincipal{
+	public:
+		componentsPrincipal();
+		componentsPrincipal(const componentsPrincipal & other);
+		virtual ~componentsPrincipal();
+
+		componentsPrincipal & operator = (const componentsPrincipal & other);
+		void setTableName(const std::string & name);
+		size_t getNbEntries() const;
+		void resize(size_t nbRow);
+		void clear();
+
+		void read(const std::string & fileName);
+		void read(const H5::H5File & file);
+		void read(const H5::Group & group);
+
+		void read(const std::string & fileName, size_t offset, size_t nbRow);
+		void read(const H5::H5File & file, size_t offset, size_t nbRow);
+		void read(const H5::Group & group, size_t offset, size_t nbRow);
+
+		void write(const std::string & fileName) const;
+		void write(H5::H5File & file) const;
+		void write(H5::Group & group) const;
+
+		H5::DataSet createDataSet(const std::string & fileName, size_t nbRow) const;
+		H5::DataSet createDataSet(H5::H5File & file, size_t nbRow) const;
+		H5::DataSet createDataSet(H5::Group & group, size_t nbRow) const;
+
+		H5::DataSet openDataSet(const std::string & fileName) const;
+		H5::DataSet openDataSet(const H5::H5File & file) const;
+		H5::DataSet openDataSet(const H5::Group & group) const;
+
+		void openDataSetBlock(const std::string & fileName, size_t nbMaxRowPerBlock);
+		void openDataSetBlock(const H5::H5File & file, size_t nbMaxRowPerBlock);
+		void openDataSetBlock(const H5::Group & group, size_t nbMaxRowPerBlock);
+
+		void setRow(size_t i, float * pc, float sv, float psv);
+		void getRow(size_t i, float *& pc, float & sv, float & psv);
+		void getRow(size_t i, const float *& pc, float & sv, float & psv) const;
+		void setPc(size_t i, const float * tabVal);
+		void setSv(size_t i, float val);
+		void setPsv(size_t i, float val);
+		const float * getPcFull() const;
+		float * getPcFull();
+		const float * getPc(size_t i) const;
+		float * getPc(size_t i);
+		const float * getSvFull() const;
+		float * getSvFull();
+		float getSv(size_t i) const;
+		float & getSv(size_t i);
+		const float * getPsvFull() const;
+		float * getPsvFull();
+		float getPsv(size_t i) const;
+		float & getPsv(size_t i);
+
+		size_t getOffsetPc() const;
+		size_t getOffsetSv() const;
+		size_t getOffsetPsv() const;
+		H5::CompType getCompTypeAll() const;
+		H5::CompType getCompTypePc() const;
+		H5::CompType getCompTypeSv() const;
+		H5::CompType getCompTypePsv() const;
+		H5::DataType getTypePc() const;
+		H5::DataType getTypeSv() const;
+		H5::DataType getTypePsv() const;
+
+		void setAllDim(size_t nb_pc);
+		void setNb_pc(size_t val);
+		size_t getNb_pc() const;
+
+		void readDataSet(const H5::DataSet & dataset);
+		void readDataSet(const H5::DataSet & dataset, size_t offset, size_t nbRow);
+		void writeDataSet(H5::DataSet & dataset) const;
+		void openDataSetBlock(const H5::DataSet & dataset, size_t nbMaxRowPerBlock);
+		bool iterateBlock();
+		size_t getFullDataSetSize() const;
+		size_t getBlockSize() const;
+		size_t getBlockOffset() const;
+
+	private:
+		void initialisationcomponentsPrincipal();
+		void allocate(size_t nbRow);
+		void copycomponentsPrincipal(const componentsPrincipal & other);
+		void readDimPc(const H5::CompType & compType);
+
+		///Number of rows in the table componentsPrincipal
+		size_t p__nbRow;
+
+		///HDF5 name of the table componentsPrincipal
+		std::string p__tableName;
+
+		///DataSet we have to use (only with openDataSetBlock)
+		H5::DataSet p__dataset;
+		///Total number of rows in the DataSet we have to use (only with openDataSetBlock)
+		size_t p__totalDataSetRow;
+		///Size of the block to be used (only with openDataSetBlock)
+		size_t p__blockSize;
+		///Offset of the current block (only with openDataSetBlock)
+		size_t p__blockOffset;
+
+		///Tensor dimension nb_pc
+		size_t p_nb_pc;
+
+		float * p_pc;
+		float * p_sv;
+		float * p_psv;
+};
+
 #endif
 
