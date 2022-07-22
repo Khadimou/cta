@@ -176,24 +176,26 @@ def pca(img):
     print("somme totale variance ",df_explainedvariance[['Explained Variance']].sum())
 
      # explained variance + cumulative variance (separate plot)
-    # fig = make_subplots(rows=3, cols=1)
+    fig = make_subplots(rows=3, cols=1)
 
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=df_explainedvariance['PC'],
-    #         y=df_explainedvariance['Cumulative Variance'],
-    #         marker=dict(size=15, color="LightSeaGreen")
-    #     ), row=1, col=1
-    #     )
+    fig.add_trace(
+        go.Scatter(
+            x=df_explainedvariance['PC'],
+            y=df_explainedvariance['Cumulative Variance'],
+            marker=dict(size=15, color="LightSeaGreen")
+        ), row=1, col=1
+        )
 
-    # fig.add_trace(
-    #     go.Bar(
-    #         x=df_explainedvariance['PC'],
-    #         y=df_explainedvariance['Explained Variance'],
-    #         marker=dict(color="RoyalBlue"),
-    #     ), row=3, col=1
-    #     )
-    # fig.show()
+    fig.add_trace(
+        go.Bar(
+            x=df_explainedvariance['PC'],
+            y=df_explainedvariance['Explained Variance'],
+            marker=dict(color="RoyalBlue"),
+        ), row=3, col=1
+        )
+    plt.ylabel('Explained variance ratio')
+    plt.xlabel('Principal components')
+    fig.show()
 
     return principal.components_, explained_variance, principal.singular_values_
 
@@ -260,5 +262,6 @@ if __name__ == '__main__':
     #     image, size = get_img(inputfile)
     #     images = np.concatenate((images,image))
 
-    process_listfile(test_fnames,"./TestFiles", images)
-    process_listfile(train_fnames,"./TrainFiles", images)
+    # process_listfile(test_fnames,"./TestFiles", images)
+    # process_listfile(train_fnames,"./TrainFiles", images)
+    pca(get_sv(train_fnames+test_fnames))

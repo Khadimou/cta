@@ -19,20 +19,20 @@ class commonEvents(IsDescription):
     alpha = Float32Col()
     distances = Float32Col()
 
-def write_file(E, h, Imax, alpha, ro, events, distances, outputfile, Etest, hTest, ImaxTest, alphaTest, roTest, distancesTest, eventsTest):
+def write_file(frame, events, distances, outputfile, frameTest, distancesTest, eventsTest):
     h5file = open_file(outputfile, mode="w", title = "Common events parameters with the tree")
     #create a group
     group1 = h5file.create_group("/","Train","Train Data Tree Info")
     #create a table
     table1 = h5file.create_table(group1, "common", commonEvents, "common parameters")
     params = table1.row # write data rows into the table
-    for i in range(len(events)):
-        params["idevent"] = events[i]
-        params["hfirstint"] = h[i]
-        params["Imax"] = Imax[i]
-        params["impact"] = ro[i]
-        params["alpha"] = alpha[i]
-        params["energy"] = E[i]
+    for i in events:
+        params["idevent"] = i
+        params["hfirstint"] = frame.iloc[i].at["hfirstint"]
+        params["Imax"] = frame.iloc[i].at["Imax"]
+        params["impact"] = frame.iloc[i].at["impact"]
+        params["alpha"] = frame.iloc[i].at["alpha"]
+        params["energy"] = frame.iloc[i].at["energy"]
         params["distances"] = distances[i]
 
         params.append()
@@ -43,13 +43,13 @@ def write_file(E, h, Imax, alpha, ro, events, distances, outputfile, Etest, hTes
     #create a table
     table2 = h5file.create_table(group2, "common", commonEvents, "common parameters")
     param = table2.row # write data rows into the table
-    for i in range(len(eventsTest)):
-        param["idevent"] = eventsTest[i]
-        param["hfirstint"] = hTest[i]
-        param["Imax"] = ImaxTest[i]
-        param["impact"] = roTest[i]
-        param["alpha"] = alphaTest[i]
-        param["energy"] = Etest[i]
+    for i in eventsTest:
+        param["idevent"] = i
+        param["hfirstint"] = frameTest.iloc[i].at["hfirstint"]
+        param["Imax"] = frameTest.iloc[i].at["Imax"]
+        param["impact"] = frameTest.iloc[i].at["impact"]
+        param["alpha"] = frameTest.iloc[i].at["alpha"]
+        param["energy"] = frameTest.iloc[i].at["energy"]
         param["distances"] = distancesTest[i]
 
         param.append()
@@ -107,16 +107,10 @@ if __name__=='__main__':
     # get gerbe parameters values
     train_fnames = glob.glob('hash_training/*.h5', recursive=True)
     test_fnames = glob.glob('hash_testing/*.h5', recursive=True)
-    # get events id and energies values from files
-    events = []
-    for input in train_fnames:
-        eventId = get_param_values(input)["idevent"]
-        for val in eventId:
-            events.append(val)
 
     #distance associated for each event
     distances = []
-    for it in events:
+    for it in df["idevent"]:
         distances.append(df.loc[it].at["distance"])
 
     frame = []
@@ -125,28 +119,12 @@ if __name__=='__main__':
         my_dataframe = get_param_values(input)
         frame.append(pd.DataFrame(my_dataframe))
     frame = pd.concat([df.set_index('idevent') for df in frame], axis=0)
-
-    Energy = []
-    hfirstint = []
-    Imax = []
-    alpha = []
-    impact = []
-    for event in events:
-        Energy.append(frame.iloc[event].at['energy'])
-        hfirstint.append(frame.iloc[event].at['hfirstint'])
-        Imax.append(frame.iloc[event].at['Imax'])
-        alpha.append(frame.iloc[event].at['alpha'])
-        impact.append(frame.iloc[event].at['impact'])
-    
-    eventsTest = []
-    for input in test_fnames:
-        eventId = get_param_values(input)["idevent"]
-        for val in eventId:
-            eventsTest.append(val)
+    #print(frame)
+    print(tree.get_tree_stats())
 
     #distance associated for each event
     distancesTest = []
-    for it in eventsTest:
+    for it in df["idevent"]:
         distancesTest.append(df.loc[it].at["distance"])
 
     frameTest = []
@@ -155,17 +133,9 @@ if __name__=='__main__':
         my_dataframe = get_param_values(input)
         frameTest.append(pd.DataFrame(my_dataframe))
     frameTest = pd.concat([df.set_index('idevent') for df in frameTest], axis=0)
-    
-    Etest = []
-    htest = []
-    Imaxtest = []
-    alphatest = []
-    impactTest = []
-    for event in eventsTest:
-        Etest.append(frameTest.iloc[event].at['energy'])
-        htest.append(frameTest.iloc[event].at['hfirstint'])
-        Imaxtest.append(frameTest.iloc[event].at['Imax'])
-        alphatest.append(frameTest.iloc[event].at['alpha'])
-        impactTest.append(frameTest.iloc[event].at['impact'])
+    #print(frameTest)
 
-    write_file(Energy, hfirstint, Imax, alpha, impact, events, distances, "tree.h5", Etest, htest, Imaxtest, alphatest, impactTest, distancesTest, eventsTest)
+    frame["idevent"] = frame.index
+    frameTest["idevent"] = frameTest.index
+
+    write_file(frame, frame["idevent"], distances, "tree.h5", frameTest, distancesTest, frameTest["idevent"])
